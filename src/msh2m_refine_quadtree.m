@@ -11,11 +11,8 @@ function msh = do_refinement (msh, iel);
   nel = columns (msh.t);
   nn  = columns (msh.p);
 
-  disp (any (msh.children (:, iel)))
   if (! any (msh.children (:, iel)))
-    disp ("no children")
     if (! any (msh.hanging (:, msh.t(1:4, iel))(:)))
-      disp ("no hanging")
       p = [];
       
       hanging(:, 1) = [msh.t(1, iel); msh.t(2, iel)];
@@ -37,7 +34,6 @@ function msh = do_refinement (msh, iel);
           p(:, padd) =  (msh.p(:, msh.t(rot(is), iel)) +                                       
                          msh.p(:, msh.t(rot(is+1), iel)))/2;
         else
-          'yo', hh{is}, msh.hanging(:, hh{is})
           assert (numel (hh{is}) == 1)
           hanging(:, is) = 0;
           nni{is} = hh{is};
@@ -60,9 +56,10 @@ function msh = do_refinement (msh, iel);
       msh.level    = cat (2, msh.level, level);
       msh.parent   = cat (2, msh.parent, parent);
       msh.onboundary =  [msh.onboundary zeros(1, columns(p))];
-
+      
       for ih = 1:4
         ihh = hanging(:, ih);
+        
         if (any (ihh))
           ob  = msh.onboundary(ihh);
           if (any (ob))
@@ -86,20 +83,22 @@ function msh = do_refinement (msh, iel);
               msh.e(2, end)   = ihh(2);
               msh.e(5, end)   = msh.onboundary(nni{ih});
             else
-              msh.onboundary (nni{ih}) = 0;
               msh.hanging (:, nni{ih}) = 0;
             endif
           else
             msh.onboundary (nni{ih}) = 0;
           endif
-          msh.hanging (:, nni{ih}) = ihh;
+          if (all (ob))
+            msh.hanging (:, nni{ih}) = 0;
+          else
+            msh.hanging (:, nni{ih}) = ihh;
+          end
         else
           msh.onboundary (nni{ih}) = 0;
           msh.hanging (:, nni{ih}) = 0;
         endif
       endfor
-
-          
+      
       msh.hanging(:, nni{5})  = [0; 0];
       msh.children = cat (2, msh.children, zeros (4,columns(t)));
       msh.children(:, iel) = nel + [1:4] .';
