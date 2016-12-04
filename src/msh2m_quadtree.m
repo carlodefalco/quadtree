@@ -45,7 +45,12 @@ function msh = msh2m_quadtree (x, y, region = 1, sides = [1:4]);
     ee = [unique(bnd(1,:)), unique(bnd(2,:))];
     msh.onboundary (ee) = ib;
   endfor
+  
+  msh.reduced_to_full = 1 : columns(msh.hanging);
+  tmp = 1 : columns (msh.reduced_to_full);
 
+  msh.full_to_reduced = zeros (1, columns (msh.p));
+  msh.full_to_reduced(1, msh.reduced_to_full) = tmp;
 endfunction
 
 %!test
