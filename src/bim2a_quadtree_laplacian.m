@@ -37,12 +37,19 @@ function A = bim2a_quadtree_laplacian (msh, D)
 endfunction
 
 function a = local_matrix (msh, iel)
-
-  a = [ 2 -1  0 -1;
-       -1  2 -1  0;
-        0 -1  2 -1;
-       -1  0 -1  2];
-
+  x = msh.p(1, msh.t([1, 2], iel));
+  y = msh.p(2, msh.t([1, 3], iel));
+  
+  hx = diff(x);
+  hy = diff(y);
+  
+  # The diagonal elements are accounted for twice, by
+  # A_loc += A_loc';
+  # so they are divided by 2.
+  a = (hx^2 + hy^2) / (2 * hx * hy) * speye(4) / 2;
+  a(1, 2) = a(3, 4) = -hy / (2 * hx);
+  a(1, 4) = a(2, 3) = -hx / (2 * hy);
+  a += a';
 endfunction
 
 %!demo
@@ -53,5 +60,3 @@ endfunction
 %! A(msh.full_to_reduced(dnodes), :) = [];
 %! A(:, msh.full_to_reduced(dnodes)) = [];
 %! spy (A);
-
-
