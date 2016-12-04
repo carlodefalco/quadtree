@@ -104,7 +104,14 @@ function msh = do_refinement (msh, iel);
       msh.children(:, iel) = nel + [1:4] .';
     endif
   endif
-  
+
+
+  msh.reduced_to_full = find (! any (msh.hanging));
+  tmp = 1 : columns (msh.reduced_to_full);
+
+  msh.full_to_reduced = zeros (1, columns (msh.p));
+  msh.full_to_reduced(1, msh.reduced_to_full) = tmp;
+
 endfunction
 
 function res = oncorner (ii)
