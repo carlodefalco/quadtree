@@ -42,9 +42,9 @@ function fpl_vtk_write_field_quadmesh (basename, mesh, nodedata, celldata, endfi
   dim = rows (p); # 2D or 3D
 
   if dim == 2
-    t = mesh.t (1:4,:);
+    t = mesh.t (1:4, ! any(mesh.children));
   elseif dim == 3
-    t = mesh.t (1:8,:);
+    t = mesh.t (1:8, ! any(mesh.children));
   else
     error ("fpl_vtk_write_field: neither 2D triangle nor 3D tetrahedral mesh");    
   endif

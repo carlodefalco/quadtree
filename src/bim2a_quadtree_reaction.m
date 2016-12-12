@@ -1,4 +1,4 @@
-function A = bim2a_quadtree_laplacian (msh, D)
+function A = bim2a_quadtree_reaction (msh, delta)
 
   real_elem = find (! any (msh.children));
 
@@ -9,7 +9,7 @@ function A = bim2a_quadtree_laplacian (msh, D)
   II = JJ = VV = [];
   for iel = real_elem
     
-    A_loc = local_matrix (msh, iel, D);
+    A_loc = local_matrix (msh, iel, delta);
 
     for inode = 1:4
       if (! any (msh.hanging(:, msh.t(inode, iel))))
@@ -36,32 +36,12 @@ function A = bim2a_quadtree_laplacian (msh, D)
               numel (msh.reduced_to_full));
 endfunction
 
-function A_loc = local_matrix (msh, iel, D)
+function A_loc = local_matrix (msh, iel, delta)
   x = msh.p(1, msh.t(1:4, iel));
   y = msh.p(2, msh.t(1:4, iel));
   
   hx = diff(x([1, 2]));
   hy = diff(y([1, 3]));
   
-  # The diagonal elements are accounted for twice, by
-  # A_loc += A_loc';
-  # so they are divided by 2.
-  A_loc = speye(4) * (hx^2 + hy^2) / (4 * hx * hy);
-  
-  A_loc(1, 2) = -hy / (2 * hx);
-  A_loc(1, 4) = -hx / (2 * hy)
-  A_loc(2, 3) = -hx / (2 * hy);
-  A_loc(3, 4) = -hy / (2 * hx);
-  A_loc += A_loc';
-  
-  A_loc *= D(iel);
+  A_loc = delta(iel) * speye(4) * hx * hy / 4;
 endfunction
-
-%!demo
-%! msh = msh2m_quadtree (1:3, 1:3, 1, 1:4);
-%! msh = msh2m_refine_quadtree(msh, 1);
-%! A = bim2a_quadtree_laplacian (msh, ones (columns (msh.t), 1));
-%! dnodes = msh2m_nodes_on_sides (msh, 1);
-%! A(msh.full_to_reduced(dnodes), :) = [];
-%! A(:, msh.full_to_reduced(dnodes)) = [];
-%! spy (A);
