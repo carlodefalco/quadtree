@@ -1,7 +1,7 @@
 function u = bim2a_quadtree_solve(msh, A, f, u, dnodes)
     # Solve for non-hanging and non-Dirichlet nodes.
     non_hanging = find(msh.full_to_reduced);
-    intnodes = setdiff(non_hanging, dnodes);
+    intnodes = msh.full_to_reduced(setdiff(non_hanging, dnodes));
     
     u(intnodes) = A(intnodes, intnodes) \ ...
                   (f(intnodes) - A(intnodes, dnodes) * u(dnodes));
