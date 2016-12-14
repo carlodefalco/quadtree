@@ -1,4 +1,3 @@
-
 function quadmesh (varargin)
   p = inputParser ();
   p.addRequired ("msh", @isstruct);
