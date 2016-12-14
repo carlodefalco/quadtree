@@ -29,7 +29,8 @@ function A = bim2a_quadtree_laplacian (msh, D)
     endfor
   endfor
 
-  A = sparse (II, JJ, VV, numel (msh.reduced_to_full),
+  where = 1:(idx-1);
+  A = sparse (II(where), JJ(where), VV(where), numel (msh.reduced_to_full),
               numel (msh.reduced_to_full));
 endfunction
 

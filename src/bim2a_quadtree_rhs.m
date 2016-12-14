@@ -18,7 +18,8 @@ function rhs = bim2a_quadtree_rhs (msh, f, g)
     endfor
   endfor
 
-  rhs = sparse (II, 1, VV, numel (msh.reduced_to_full), 1);
+  where = 1:(idx-1);
+  rhs = sparse (II(where), 1, VV(where), numel (msh.reduced_to_full), 1);
 endfunction
 
 function rhs_loc = local_rhs (msh, iel, f, g)
