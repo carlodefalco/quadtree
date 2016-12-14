@@ -2,9 +2,9 @@ clear all;
 close all;
 clc;
 
-n = 10 * 2.^(0:2);
+n = 10 * 2.^(0:3);
 
-for i = 1:length(n)
+for i = 1 : length(n)
     fprintf("i = %d\n", i);
     
     # Mesh definition.
@@ -23,12 +23,14 @@ for i = 1:length(n)
 
     x = msh.p(1, :).';
     y = msh.p(2, :).';
-
+    
+    # Define parameters and exact solution.
     epsilon = 1;
     lambda = 1 / epsilon;
 
     u_ex = sin(x) .* cos(2*y);
     
+    # Assemble system.
     alpha = epsilon * ones(Nelements, 1);
     psi = x / epsilon;
 
@@ -38,12 +40,16 @@ for i = 1:length(n)
 
     f = bim2a_quadtree_rhs(msh, ones(Nelements, 1), cos(2*y) .* (cos(x) + 5 * epsilon * sin(x)));
 
+    # Compute solution and error.
     u = bim2a_quadtree_solve(msh, A, f, u_ex, dnodes);
 
     err(i) = norm(u - u_ex, inf);
     
+    # Save solution to file.
     fclose all;
     filename = sprintf("sol_%d", i);
-    delete([filename ".vtu"]);
+    if (exist([filename ".vtu"], "file"))
+        delete([filename ".vtu"]);
+    endif
     fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"}, {}, 1);
 endfor
