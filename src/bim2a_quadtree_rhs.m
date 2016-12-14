@@ -1,9 +1,9 @@
 function rhs = bim2a_quadtree_rhs (msh, f, g)
   real_elem = find (! any (msh.children));
 
-  rhs = sparse (numel (msh.reduced_to_full), 1);
-
-  II = JJ = VV = [];
+  II = VV = numel(real_elem);
+  idx = 1;
+  
   for iel = real_elem
     rhs_loc = local_rhs (msh, iel, f, g);
 
@@ -11,8 +11,10 @@ function rhs = bim2a_quadtree_rhs (msh, f, g)
       if (! any (msh.hanging(:, msh.t(inode, iel))))
         loci = msh.full_to_reduced(msh.t(inode, iel));
         
-        II = [II, loci];
-        VV = [VV, rhs_loc(inode)];
+        II(idx) = loci;
+        VV(idx) = rhs_loc(inode);
+        
+        idx += 1;
       endif
     endfor
   endfor

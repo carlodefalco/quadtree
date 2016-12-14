@@ -2,10 +2,9 @@ function A = bim2a_quadtree_advection_diffusion (msh, alpha, psi)
 
   real_elem = find (! any (msh.children));
 
-  A = sparse (numel (msh.reduced_to_full),
-              numel (msh.reduced_to_full));
-
-  II = JJ = VV = [];
+  II = JJ = VV = zeros(1, 16 * columns(msh.t));
+  idx = 1;
+  
   for iel = real_elem
     A_loc = local_matrix (msh, iel, alpha, psi);
 
@@ -21,16 +20,26 @@ function A = bim2a_quadtree_advection_diffusion (msh, alpha, psi)
             locv = [1/2 1/2];
           end
           
-          II = [II, loci*ones(1, numel(locj))];
-          JJ = [JJ, locj];
-          VV = [VV, A_loc(inode, jnode)*locv];
-          
+          if (numel(locj) == 1)
+            II(idx) = loci;
+            JJ(idx) = locj;
+            VV(idx) = A_loc(inode, jnode)*locv;
+            
+            idx += 1;
+          else
+            II(idx:(idx+1)) = loci*ones(1, numel(locj));
+            JJ(idx:(idx+1)) = locj;
+            VV(idx:(idx+1)) = A_loc(inode, jnode)*locv;
+            
+            idx += 2;
+          endif
         endfor
       endif
     endfor
   endfor
-
-  A = sparse (II, JJ, VV, numel (msh.reduced_to_full),
+  
+  where = 1:(idx-1);
+  A = sparse (II(where), JJ(where), VV(where), numel (msh.reduced_to_full),
               numel (msh.reduced_to_full));
 endfunction
 

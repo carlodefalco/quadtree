@@ -2,13 +2,10 @@ function A = bim2a_quadtree_laplacian (msh, D)
 
   real_elem = find (! any (msh.children));
 
-  A = sparse (numel (msh.reduced_to_full),
-              numel (msh.reduced_to_full));
-
-
-  II = JJ = VV = [];
+  II = JJ = VV = zeros(1, 16 * columns(msh.t));
+  idx = 1;
+  
   for iel = real_elem
-    
     A_loc = local_matrix (msh, iel, D);
 
     for inode = 1:4
@@ -23,10 +20,19 @@ function A = bim2a_quadtree_laplacian (msh, D)
             locv = [1/2 1/2];
           end
           
-          II = [II, loci*ones(1, numel(locj))];
-          JJ = [JJ, locj];
-          VV = [VV, A_loc(inode, jnode)*locv];
-          
+          if (numel(locj) == 1)
+            II(idx) = loci;
+            JJ(idx) = locj;
+            VV(idx) = A_loc(inode, jnode)*locv;
+            
+            idx += 1;
+          else
+            II(idx:(idx+1)) = loci*ones(1, numel(locj));
+            JJ(idx:(idx+1)) = locj;
+            VV(idx:(idx+1)) = A_loc(inode, jnode)*locv;
+            
+            idx += 2;
+          endif
         endfor
       endif
     endfor
