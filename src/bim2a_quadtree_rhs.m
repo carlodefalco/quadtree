@@ -1,7 +1,7 @@
 function rhs = bim2a_quadtree_rhs (msh, f, g)
   real_elem = find (! any (msh.children));
 
-  II = VV = numel(real_elem);
+  II = VV = zeros(1, 4 * numel(real_elem));
   idx = 1;
   
   for iel = real_elem
