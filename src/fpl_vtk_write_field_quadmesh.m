@@ -46,7 +46,7 @@ function fpl_vtk_write_field_quadmesh (basename, mesh, nodedata, celldata, endfi
   elseif dim == 3
     t = mesh.t (1:8, ! any(mesh.children));
   else
-    error ("fpl_vtk_write_field: neither 2D quadrilaterao nor 3D hexahedral mesh");    
+    error ("fpl_vtk_write_field: neither 2D quadrilaterals nor 3D hexahedral mesh");    
   endif
   
   t -= 1;
