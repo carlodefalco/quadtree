@@ -20,19 +20,10 @@ function A = bim2a_quadtree_laplacian (msh, D)
             locv = [1/2 1/2];
           end
           
-          if (numel(locj) == 1)
-            II(idx) = loci;
-            JJ(idx) = locj;
-            VV(idx) = A_loc(inode, jnode)*locv;
-            
-            idx += 1;
-          else
-            II(idx:(idx+1)) = loci*ones(1, numel(locj));
-            JJ(idx:(idx+1)) = locj;
-            VV(idx:(idx+1)) = A_loc(inode, jnode)*locv;
-            
-            idx += 2;
-          endif
+          II(idx : (idx + numel(locj) - 1)) = loci;
+          JJ(idx : (idx + numel(locj) - 1)) = locj;
+          VV(idx : (idx + numel(locj) - 1)) = A_loc(inode, jnode)*locv;
+          idx += numel(locj);
         endfor
       endif
     endfor

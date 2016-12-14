@@ -13,7 +13,6 @@ function rhs = bim2a_quadtree_rhs (msh, f, g)
         
         II(idx) = loci;
         VV(idx) = rhs_loc(inode);
-        
         idx += 1;
       endif
     endfor
