@@ -6,7 +6,12 @@ function A = bim2a_quadtree_advection_diffusion (msh, alpha, psi)
   idx = 1;
   
   for iel = real_elem
-    A_loc = local_matrix (msh, iel, alpha, psi);
+    coords = msh.p(:, msh.t(1:4, iel));
+    
+    hx = diff(coords(1, [1, 2]));
+    hy = diff(coords(2, [1, 3]));
+    
+    A_loc = local_matrix (hx, hy, alpha(iel), psi(msh.t(1:4, iel)));
 
     for inode = 1:4
       if (! any (msh.hanging(:, msh.t(inode, iel))))
@@ -34,32 +39,25 @@ function A = bim2a_quadtree_advection_diffusion (msh, alpha, psi)
               numel (msh.reduced_to_full));
 endfunction
 
-function A_loc = local_matrix (msh, iel, alpha, psi)
-  x = msh.p(1, msh.t(1:4, iel));
-  y = msh.p(2, msh.t(1:4, iel));
-  
-  hx = diff(x([1, 2]));
-  hy = diff(y([1, 3]));
-  
-  psiloc = psi(msh.t(1:4, iel));
-  psi12 = psiloc(2) - psiloc(1);
-  psi23 = psiloc(3) - psiloc(2);
-  psi34 = psiloc(4) - psiloc(3);
-  psi41 = psiloc(1) - psiloc(4);
+function A_loc = local_matrix (hx, hy, alpha_loc, psi_loc)
+  psi12 = psi_loc(2) - psi_loc(1);
+  psi23 = psi_loc(3) - psi_loc(2);
+  psi34 = psi_loc(4) - psi_loc(3);
+  psi41 = psi_loc(1) - psi_loc(4);
   
   [bp12, bm12] = bimu_bernoulli(psi12);
   [bp23, bm23] = bimu_bernoulli(psi23);
   [bp34, bm34] = bimu_bernoulli(psi34);
   [bp41, bm41] = bimu_bernoulli(psi41);
   
-  bp12 = alpha(iel) * bp12 * hy / (2 * hx);
-  bm12 = alpha(iel) * bm12 * hy / (2 * hx);
-  bp23 = alpha(iel) * bp23 * hx / (2 * hy);
-  bm23 = alpha(iel) * bm23 * hx / (2 * hy);
-  bp34 = alpha(iel) * bp34 * hy / (2 * hx);
-  bm34 = alpha(iel) * bm34 * hy / (2 * hx);
-  bp41 = alpha(iel) * bp41 * hx / (2 * hy);
-  bm41 = alpha(iel) * bm41 * hx / (2 * hy);
+  bp12 = alpha_loc * bp12 * hy / (2 * hx);
+  bm12 = alpha_loc * bm12 * hy / (2 * hx);
+  bp23 = alpha_loc * bp23 * hx / (2 * hy);
+  bm23 = alpha_loc * bm23 * hx / (2 * hy);
+  bp34 = alpha_loc * bp34 * hy / (2 * hx);
+  bm34 = alpha_loc * bm34 * hy / (2 * hx);
+  bp41 = alpha_loc * bp41 * hx / (2 * hy);
+  bm41 = alpha_loc * bm41 * hx / (2 * hy);
 
   A_loc(1, 1) = bm12 + bp41;
   A_loc(1, 2) = -bp12;

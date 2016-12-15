@@ -6,7 +6,12 @@ function A = bim2a_quadtree_reaction (msh, delta)
   idx = 1;
   
   for iel = real_elem
-    A_loc = local_matrix (msh, iel, delta);
+    coords = msh.p(:, msh.t(1:4, iel));
+    
+    hx = diff(coords(1, [1, 2]));
+    hy = diff(coords(2, [1, 3]));
+    
+    A_loc = local_matrix (hx, hy, delta(iel));
 
     for inode = 1:4
       if (! any (msh.hanging(:, msh.t(inode, iel))))
@@ -34,12 +39,6 @@ function A = bim2a_quadtree_reaction (msh, delta)
               numel (msh.reduced_to_full));
 endfunction
 
-function A_loc = local_matrix (msh, iel, delta)
-  x = msh.p(1, msh.t(1:4, iel));
-  y = msh.p(2, msh.t(1:4, iel));
-  
-  hx = diff(x([1, 2]));
-  hy = diff(y([1, 3]));
-  
-  A_loc = delta(iel) * speye(4) * hx * hy / 4;
+function A_loc = local_matrix (hx, hy, delta_loc)
+  A_loc = delta_loc * speye(4) * hx * hy / 4;
 endfunction

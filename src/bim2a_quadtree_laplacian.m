@@ -6,7 +6,12 @@ function A = bim2a_quadtree_laplacian (msh, D)
   idx = 1;
   
   for iel = real_elem
-    A_loc = local_matrix (msh, iel, D);
+    coords = msh.p(:, msh.t(1:4, iel));
+    
+    hx = diff(coords(1, [1, 2]));
+    hy = diff(coords(2, [1, 3]));
+    
+    A_loc = local_matrix (hx, hy, D(iel));
 
     for inode = 1:4
       if (! any (msh.hanging(:, msh.t(inode, iel))))
@@ -34,13 +39,7 @@ function A = bim2a_quadtree_laplacian (msh, D)
               numel (msh.reduced_to_full));
 endfunction
 
-function A_loc = local_matrix (msh, iel, D)
-  x = msh.p(1, msh.t(1:4, iel));
-  y = msh.p(2, msh.t(1:4, iel));
-  
-  hx = diff(x([1, 2]));
-  hy = diff(y([1, 3]));
-  
+function A_loc = local_matrix (hx, hy, D_loc)
   # The diagonal elements are accounted for twice, by
   # A_loc += A_loc';
   # so they are divided by 2.
@@ -52,7 +51,7 @@ function A_loc = local_matrix (msh, iel, D)
   A_loc(3, 4) = -hy / (2 * hx);
   A_loc += A_loc';
   
-  A_loc *= D(iel);
+  A_loc *= D_loc;
 endfunction
 
 %!demo
