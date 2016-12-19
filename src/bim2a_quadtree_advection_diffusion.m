@@ -11,8 +11,8 @@ function A = bim2a_quadtree_advection_diffusion (msh, alpha, psi)
     hx = diff(coords(1, [1, 2]));
     hy = diff(coords(2, [1, 3]));
     
-    A_loc = local_matrix (hx, hy, alpha(iel), psi(msh.t(1:4, iel)));
-
+    ##    A_loc = local_matrix (hx, hy, alpha(iel), psi(msh.t(1:4, iel)));
+    A_loc = __advdiff_local_matrix__ (hx, hy, alpha(iel), psi(msh.t(1:4, iel)));
     for inode = 1:4
       if (! any (msh.hanging(:, msh.t(inode, iel))))
         loci = msh.full_to_reduced(msh.t(inode, iel));
