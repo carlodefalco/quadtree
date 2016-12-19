@@ -51,19 +51,20 @@ function msh = do_refinement_recursive(msh, iel)
 endfunction
 
 %!demo
-%!n = 10;
-%!
-%!# Mesh definition.
-%!x = linspace(0, 1, n);
-%!y = linspace(0, 2, n);
-%!
-%!region = 1;
-%!sides = 1:4;
-%!
-%!msh = msh2m_quadtree(x, y, region, sides);
-%!
-%!# Try recursive refinement.
-%!msh = msh2m_refine_quadtree_recursive (msh, 22);
-%!msh = msh2m_refine_quadtree_recursive (msh, [84 81 98 106]);
-%!quadmesh(msh, "show_cell_numbers", "show_node_numbers");
-%!
+%!  
+%!  n = 10;
+%!  
+%!  # Mesh definition.
+%!  x = linspace(0, 1, n);
+%!  y = linspace(0, 2, n);
+%!  
+%!  region = 1;
+%!  sides = 1:4;
+%!  
+%!  msh = msh2m_quadtree(x, y, region, sides);
+%!  
+%!  # Try recursive refinement.
+%!  msh = msh2m_refine_quadtree_recursive (msh, 22);
+%!  msh = msh2m_refine_quadtree_recursive (msh, [84 81 98 106]);
+%!  quadmesh(msh, "show_cell_numbers", "show_node_numbers");
+%!  
