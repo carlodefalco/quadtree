@@ -13,7 +13,9 @@ sides = 1:4;
 
 msh = msh2m_quadtree(x, y, region, sides);
 
-for k = 1:10
+for i = 1:10
+    fprintf("i = %d\n", i);
+    
     # Build global matrix.
     Nnodes = columns(msh.p);
     Nelements = columns(msh.t);
@@ -44,7 +46,7 @@ for k = 1:10
 
     # Save solution to file.
     fclose all;
-    filename = "sol";
+    filename = sprintf("sol_%d", i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
@@ -54,9 +56,9 @@ for k = 1:10
     tol = 1e-3;
     to_refine = false(1, Nelements);
     
-    elem_to_check = find(!any(msh.children));
+    refineable_elements = find(!any(msh.children));
     
-    for iel = elem_to_check
+    for iel = refineable_elements
         nodes = msh.t(1:4, iel);
 
         x_iel = [min(msh.p(1, nodes)), max(msh.p(1, nodes))];
@@ -77,22 +79,27 @@ for k = 1:10
         rhs_iel = bim2a_quadtree_rhs(msh_iel, f(msh_iel), g(x_iel, y_iel));
 
         # Compute boundary conditions.
+        # Original vertices.
         u_dnodes = zeros(2 * numel(nodes) + 1, 1);
         u_dnodes(msh_iel.t(1:4, 1)) = u(nodes);
 
-        new_dnodes = [1, 3, 4, 2;
-                      3, 4, 2, 1];
+        # Added vertices (side midpoints).
+        hanging_sides = [1, 3, 4, 2;
+                         3, 4, 2, 1];
+        u_dnodes((numel(nodes)+1) : end - 1) = mean(u_dnodes(hanging_sides));
+        
+        # Vertex in the middle of the element.
+        u_dnodes(end) = 0;
 
-        u_dnodes((numel(nodes)+1) : end - 1) = mean(u_dnodes(new_dnodes));
-        u_dnodes(end) = 0; # Node in the middle of the element.
-
-        # Compute solution and error.
+        # Compute solution and evaluate error.
         u_iel = bim2a_quadtree_solve(msh_iel, A_iel, rhs_iel, u_dnodes, dnodes_iel);
         
         if (abs(u_iel(end) - mean(u(nodes))) > tol)
             to_refine(iel) = true;
         endif
     endfor
+    
+    fprintf("Elements to refine = %d\n\n", sum(to_refine));
     
     if (!any(to_refine))
         break;
@@ -101,16 +108,7 @@ for k = 1:10
     endif
 endfor
 
-# Plot non-refined mesh.
-figure;
-subplot(1, 2, 1);
-quadmesh(msh);
-title("Old mesh");
-xlabel("x");
-ylabel("y");
-
 # Plot refined mesh.
-subplot(1, 2, 2);
 quadmesh(msh);
 title("New mesh");
 xlabel("x");
