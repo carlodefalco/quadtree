@@ -15,7 +15,6 @@ for i = 1 : length(n)
     sides = 1:4;
 
     msh = msh2m_quadtree(x, y, region, sides);
-    msh = msh2m_refine_quadtree (msh, [10]);
     
     # Build global matrix.
     Nnodes = columns(msh.p);
@@ -31,17 +30,19 @@ for i = 1 : length(n)
     u_ex = sin(x) .* cos(2*y);
     
     # Assemble system.
-    alpha = epsilon * ones(Nelements, 1);
-    psi = x / epsilon;
-
-    A = bim2a_quadtree_advection_diffusion(msh, alpha, psi);
+    alpha = @(msh) epsilon * ones(columns(msh.t), 1);
+    psi = @(x, y) x / epsilon;
+    
+    A = bim2a_quadtree_advection_diffusion(msh, alpha(msh), psi(x, y));
 
     dnodes = msh2m_nodes_on_sides(msh, 1:4);
 
-    f = bim2a_quadtree_rhs(msh, ones(Nelements, 1), cos(2*y) .* (cos(x) + 5 * epsilon * sin(x)));
-
+    f = @(msh) ones(columns(msh.t), 1);
+    g = @(x, y) cos(2*y) .* (cos(x) + 5 * epsilon * sin(x));
+    rhs = bim2a_quadtree_rhs(msh, f(msh), g(x, y));
+    
     # Compute solution and error.
-    u = bim2a_quadtree_solve(msh, A, f, u_ex, dnodes);
+    u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
 
     err(i) = norm(u - u_ex, inf);
     
