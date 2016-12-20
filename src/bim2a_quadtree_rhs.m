@@ -15,11 +15,15 @@ function rhs = bim2a_quadtree_rhs (msh, f, g)
     for inode = 1:4
       if (! any (msh.hanging(:, msh.t(inode, iel))))
         loci = msh.full_to_reduced(msh.t(inode, iel));
-        
-        II(idx) = loci;
-        VV(idx) = rhs_loc(inode);
-        idx += 1;
+        locv = 1;
+      else
+        loci = msh.full_to_reduced(msh.hanging(:, msh.t(inode, iel)).');
+        locv = 1/2;
       endif
+        
+      II(idx : (idx + numel(loci) - 1)) = loci;
+      VV(idx : (idx + numel(loci) - 1)) = rhs_loc(inode) * locv;
+      idx += numel(loci);
     endfor
   endfor
 
