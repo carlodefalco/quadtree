@@ -25,7 +25,6 @@ for i = 1 : length(n)
     
     # Define parameters and exact solution.
     epsilon = 1;
-    lambda = 1 / epsilon;
 
     u_ex = sin(x) .* cos(2*y);
     
