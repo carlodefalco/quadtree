@@ -57,6 +57,9 @@ function msh = do_refinement (msh, iel);
       msh.parent   = cat (2, msh.parent, parent);
       msh.onboundary =  [msh.onboundary zeros(1, columns(p))];
       
+      sides = unique(msh.e(5, :));
+      oncorner = @(ii) ismember (ii, sides);
+      
       for ih = 1:4
         ihh = hanging(:, ih);
         
@@ -119,10 +122,6 @@ function msh = do_refinement (msh, iel);
   msh.full_to_reduced = zeros (1, columns (msh.p));
   msh.full_to_reduced(1, msh.reduced_to_full) = tmp;
 
-endfunction
-
-function res = oncorner (ii)
-  res = ismember (ii, 1:4);
 endfunction
 
 %!test
