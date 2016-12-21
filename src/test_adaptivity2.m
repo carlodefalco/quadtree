@@ -21,7 +21,7 @@ for i = 1:10
     Nelements = columns(msh.t);
 
     # Define parameters and exact solution.
-    epsilon = 1e-34;
+    epsilon = 1e-2;
 
     # Assemble system.
     alpha = @(msh) epsilon * ones(columns(msh.t), 1);
