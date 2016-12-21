@@ -42,12 +42,15 @@ for i = 1:10
     # Boundary conditions.
     d14 = msh2m_nodes_on_sides(msh, [1 4]);
     d2 = msh2m_nodes_on_sides(msh, 2);
-    d3 = msh2m_nodes_on_sides(msh, 2);
+    d3 = msh2m_nodes_on_sides(msh, 3);
+    
+    dnodes = unique([d14 d2 d3]);
+    
     u(d14) = 1;
     u(d2) = 1 - msh.p(2, d2).^2;
     u(d3) = 1 - msh.p(1, d3).^2;
     
-    u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u, [d14 d2 d3]);
+    u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u, dnodes);
 
     # Save solution to file.
     fclose all;
