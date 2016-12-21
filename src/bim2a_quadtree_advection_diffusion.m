@@ -13,24 +13,32 @@ function A = bim2a_quadtree_advection_diffusion (msh, alpha, psi)
     
     ##    A_loc = local_matrix (hx, hy, alpha(iel), psi(msh.t(1:4, iel)));
     A_loc = __advdiff_local_matrix__ (hx, hy, alpha(iel), psi(msh.t(1:4, iel)));
+    
     for inode = 1:4
-      if (! any (msh.hanging(:, msh.t(inode, iel))))
-        loci = msh.full_to_reduced(msh.t(inode, iel));
-        for jnode = 1:4
-          if (! any (msh.hanging(:, msh.t(jnode, iel))))
-            locj = msh.full_to_reduced(msh.t(jnode, iel));
-            locv = 1;
-          else
-            locj = msh.full_to_reduced(msh.hanging(:, msh.t(jnode, iel)).');
-            locv = [1/2 1/2];
-          end
-          
-          II(idx : (idx + numel(locj) - 1)) = loci;
-          JJ(idx : (idx + numel(locj) - 1)) = locj;
-          VV(idx : (idx + numel(locj) - 1)) = A_loc(inode, jnode)*locv;
-          idx += numel(locj);
-        endfor
-      endif
+      for jnode = 1:4
+        if (! any (msh.hanging(:, msh.t(inode, iel))))
+          loci = msh.full_to_reduced(msh.t(inode, iel));
+        else
+          loci = msh.full_to_reduced(msh.hanging(:, msh.t(inode, iel)).');
+        endif
+        
+        if (! any (msh.hanging(:, msh.t(jnode, iel))))
+          locj = msh.full_to_reduced(msh.t(jnode, iel));
+        else
+          locj = msh.full_to_reduced(msh.hanging(:, msh.t(jnode, iel)).');
+        endif
+        
+        if (! any (msh.hanging(:, msh.t([inode jnode], iel))))
+          locv = 1;
+        else
+          locv = [1/2 1/2];
+        endif
+        
+        II(idx : (idx + numel(locv) - 1)) = loci;
+        JJ(idx : (idx + numel(locv) - 1)) = locj;
+        VV(idx : (idx + numel(locv) - 1)) = A_loc(inode, jnode)*locv;
+        idx += numel(locv);
+      endfor
     endfor
   endfor
   
