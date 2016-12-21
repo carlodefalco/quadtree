@@ -1,4 +1,4 @@
-function A = bim2a_quadtree_reaction (msh, delta)
+function A = bim2a_quadtree_reaction (msh, delta, zeta)
 
   real_elem = find (! any (msh.children));
 
@@ -11,8 +11,8 @@ function A = bim2a_quadtree_reaction (msh, delta)
     hx = diff(coords(1, [1, 2]));
     hy = diff(coords(2, [1, 3]));
     
-    ##    A_loc = local_matrix (hx, hy, delta(iel));
-    A_loc = __reaction_local_matrix__ (hx, hy, delta(iel));
+    ##    A_loc = local_matrix (hx, hy, delta(iel), zeta(msh.t(1:4, iel)));
+    A_loc = __reaction_local_matrix__ (hx, hy, delta(iel), zeta(msh.t(1:4, iel)));
     
     for inode = 1:4
       for jnode = 1:4
@@ -47,6 +47,6 @@ function A = bim2a_quadtree_reaction (msh, delta)
               numel (msh.reduced_to_full));
 endfunction
 
-function A_loc = local_matrix (hx, hy, delta_loc)
-  A_loc = delta_loc * speye(4) * hx * hy / 4;
+function A_loc = local_matrix (hx, hy, delta_loc, zeta_loc)
+  A_loc = delta_loc * spdiags(zeta_loc(:), 0, 4) * hx * hy / 4;
 endfunction
