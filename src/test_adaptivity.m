@@ -68,9 +68,3 @@ for i = 1:10
         msh = msh2m_refine_quadtree_recursive(msh, find(to_refine));
     endif
 endfor
-
-# Plot refined mesh.
-quadmesh(msh);
-title("New mesh");
-xlabel("x");
-ylabel("y");
