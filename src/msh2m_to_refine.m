@@ -1,4 +1,4 @@
-function to_refine = msh2m_to_refine(msh, alpha, psi, f, g, u, iel, tol)
+function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     nodes = msh.t(1:4, iel);
 
     x_iel = [min(msh.p(1, nodes)), max(msh.p(1, nodes))];
@@ -15,11 +15,11 @@ function to_refine = msh2m_to_refine(msh, alpha, psi, f, g, u, iel, tol)
     y_iel = msh_iel.p(2, :).';
     
     # Assemble system.
-    A_iel = bim2a_quadtree_advection_diffusion(msh_iel, alpha(msh_iel), psi(x_iel, y_iel));
+    A_iel = A_fun(msh_iel);
 
-    dnodes_iel = msh2m_nodes_on_sides(msh_iel, 1:4);
+    dnodes_iel = msh2m_nodes_on_sides(msh_iel, 1:4); # Dirichlet nodes.
 
-    rhs_iel = bim2a_quadtree_rhs(msh_iel, f(msh_iel), g(x_iel, y_iel));
+    rhs_iel = rhs_fun(msh_iel);
 
     # Compute boundary conditions.
     # Original vertices.

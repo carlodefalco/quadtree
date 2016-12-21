@@ -30,18 +30,19 @@ for i = 1:10
 
     # Assemble system.
     alpha = @(msh) epsilon * ones(columns(msh.t), 1);
-    psi = @(x, y) x / epsilon;
+    psi = @(msh) msh.p(1, :) / epsilon;
 
-    A = bim2a_quadtree_advection_diffusion(msh, alpha(msh), psi(x, y));
+    A = @(msh) bim2a_quadtree_advection_diffusion(msh, alpha(msh), psi(msh));
 
-    dnodes = msh2m_nodes_on_sides(msh, 1:4);
-
+    dnodes = msh2m_nodes_on_sides(msh, 1:4); # Dirichlet nodes.
+    
     f = @(msh) ones(columns(msh.t), 1);
-    g = @(x, y) cos(2*y) .* (cos(x) + 5 * epsilon * sin(x));
-    rhs = bim2a_quadtree_rhs(msh, f(msh), g(x, y));
+    g = @(msh) cos(2*msh.p(2, :)) .* (cos(msh.p(1, :)) + 5 * epsilon * sin(msh.p(1, :)));
+    
+    rhs = @(msh) bim2a_quadtree_rhs(msh, f(msh), g(msh));
 
     # Compute solution and error.
-    u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
+    u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u_ex, dnodes);
 
     # Save solution to file.
     fclose all;
@@ -57,7 +58,7 @@ for i = 1:10
     
     to_refine = false(1, Nelements);
     to_refine(refineable_elements) = ...
-        parcellfun(4, @(iel) msh2m_to_refine(msh, alpha, psi, f, g, u, iel, tol),
+        parcellfun(4, @(iel) msh2m_to_refine(msh, A, rhs, u, iel, tol),
                    num2cell(refineable_elements));
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
