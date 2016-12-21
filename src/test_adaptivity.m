@@ -30,8 +30,6 @@ for i = 1:10
     psi = @(msh) msh.p(1, :) / epsilon;
 
     A = @(msh) bim2a_quadtree_advection_diffusion(msh, alpha(msh), psi(msh));
-
-    dnodes = msh2m_nodes_on_sides(msh, 1:4); # Dirichlet nodes.
     
     f = @(msh) ones(columns(msh.t), 1);
     g = @(msh) cos(2*msh.p(2, :)) .* (cos(msh.p(1, :)) + 5 * epsilon * sin(msh.p(1, :)));
@@ -39,6 +37,8 @@ for i = 1:10
     rhs = @(msh) bim2a_quadtree_rhs(msh, f(msh), g(msh));
 
     # Compute solution and error.
+    dnodes = msh2m_nodes_on_sides(msh, 1:4); # Dirichlet nodes.
+    
     u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u_ex, dnodes);
 
     # Save solution to file.

@@ -17,11 +17,12 @@ function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     # Assemble system.
     A_iel = A_fun(msh_iel);
 
-    dnodes_iel = msh2m_nodes_on_sides(msh_iel, 1:4); # Dirichlet nodes.
 
     rhs_iel = rhs_fun(msh_iel);
 
-    # Compute boundary conditions.
+    # Boundary conditions.
+    dnodes_iel = msh2m_nodes_on_sides(msh_iel, 1:4); # Dirichlet nodes.
+    
     # Original vertices.
     u_dnodes = zeros(2 * numel(nodes) + 1, 1);
     u_dnodes(msh_iel.t(1:4, 1)) = u(nodes);

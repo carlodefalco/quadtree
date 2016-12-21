@@ -30,8 +30,6 @@ for i = 1:10
     
     A = @(msh) bim2a_quadtree_laplacian(msh, alpha(msh)) + ...
                bim2a_quadtree_reaction (msh, delta(msh), zeta(msh));
-
-    dnodes = msh2m_nodes_on_sides(msh, 1:4); # Dirichlet nodes.
     
     f = @(msh) ones(columns(msh.t), 1);
     g = @(msh) 1 + 2 * msh.p(1, :) .* msh.p(2, :);
@@ -41,13 +39,15 @@ for i = 1:10
     # Compute solution and error.
     u = zeros(columns(msh.p), 1);
     
+    # Boundary conditions.
     d14 = msh2m_nodes_on_sides(msh, [1 4]);
     d2 = msh2m_nodes_on_sides(msh, 2);
     d3 = msh2m_nodes_on_sides(msh, 2);
     u(d14) = 1;
     u(d2) = 1 - msh.p(2, d2).^2;
     u(d3) = 1 - msh.p(1, d3).^2;
-    u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u, dnodes);
+    
+    u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u, [d14 d2 d3]);
 
     # Save solution to file.
     fclose all;
