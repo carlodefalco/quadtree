@@ -49,7 +49,7 @@ for i = 1:10
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"}, {}, 1);
+    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"; u - u_ex, "err"}, {}, 1);
 
     # Determine elements to be refined.
     tol = 1e-2;
