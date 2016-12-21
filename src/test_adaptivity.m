@@ -20,13 +20,10 @@ for i = 1:10
     Nnodes = columns(msh.p);
     Nelements = columns(msh.t);
 
-    x = msh.p(1, :).';
-    y = msh.p(2, :).';
-
     # Define parameters and exact solution.
     epsilon = 1;
 
-    u_ex = sin(x) .* cos(2*y);
+    u_ex = (sin(msh.p(1, :)) .* cos(2*msh.p(2, :))).';
 
     # Assemble system.
     alpha = @(msh) epsilon * ones(columns(msh.t), 1);
