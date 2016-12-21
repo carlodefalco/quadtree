@@ -62,6 +62,8 @@ function msh = do_refinement (msh, iel);
         
         if (any (ihh))
           ob  = msh.onboundary(ihh);
+          internal_boundary = false;
+          
           if (any (ob))
             oc = oncorner (ihh);
             if (all (ob))
@@ -70,14 +72,15 @@ function msh = do_refinement (msh, iel);
               elseif (oc(2) && ! oc(1))
                 msh.onboundary (nni{ih}) = ob(1);
               else
-                aaa = find ((msh.e(1, :) == ihh(1)
+                idx = find ((msh.e(1, :) == ihh(1)
                              | (msh.e(2, :) == ihh(1)))
                             & (msh.e(1, :) == ihh(2)
                                | (msh.e(2, :) == ihh(2))));
-                if (! isempty(aaa))
-                  msh.onboundary (nni{ih}) = msh.e (5, aaa);
+                if (! isempty (idx))
+                  msh.onboundary (nni{ih}) = msh.e (5, idx);
                 else
                   msh.onboundary (nni{ih}) = [];
+                  internal_boundary = true;
                 endif
               endif
               msh.e(1, end+1) = ihh(1);
@@ -92,7 +95,7 @@ function msh = do_refinement (msh, iel);
           else
             msh.onboundary (nni{ih}) = 0;
           endif
-          if (all (ob))
+          if (all (ob) && ! internal_boundary)
             msh.hanging (:, nni{ih}) = 0;
           else
             msh.hanging (:, nni{ih}) = ihh;
