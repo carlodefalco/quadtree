@@ -1,5 +1,10 @@
+all: __advdiff_local_matrix__.oct __reaction_local_matrix__.oct
 
-all: __advdiff_local_matrix__.oct
+%.oct : %.cc
+	mkoctfile $<
 
-__advdiff_local_matrix__.oct : __advdiff_local_matrix__.cc
-	mkoctfile __advdiff_local_matrix__.cc
+clean:
+	$(RM) *.o
+
+distclean: clean
+	$(RM) *.oct
