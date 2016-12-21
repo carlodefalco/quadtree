@@ -74,7 +74,11 @@ function msh = do_refinement (msh, iel);
                              | (msh.e(2, :) == ihh(1)))
                             & (msh.e(1, :) == ihh(2)
                                | (msh.e(2, :) == ihh(2))));
-                msh.onboundary (nni{ih}) = msh.e (5, aaa);
+                if (! isempty(aaa))
+                  msh.onboundary (nni{ih}) = msh.e (5, aaa);
+                else
+                  msh.onboundary (nni{ih}) = [];
+                endif
               endif
               msh.e(1, end+1) = ihh(1);
               msh.e(2, end)   = nni{ih};
