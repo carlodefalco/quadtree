@@ -1,7 +1,7 @@
 #include <octave/oct.h>
 
 DEFUN_DLD (__reaction_local_matrix__, args, ,
-           "Computing the local matrix for the advection-diffusion operator")
+           "Computing the local matrix for the reaction operator")
 {
   octave_value retval;
   
