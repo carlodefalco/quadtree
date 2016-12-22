@@ -17,7 +17,6 @@ function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     # Assemble system.
     A_iel = A_fun(msh_iel);
 
-
     rhs_iel = rhs_fun(msh_iel);
 
     # Boundary conditions.
