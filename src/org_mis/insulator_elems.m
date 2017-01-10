@@ -1,7 +1,7 @@
 function [insulator] = insulator_elems(msh)
     Nelems = columns(msh.t);
     
-    insulator = false(Nelems, 1);
+    insulator = false(1, Nelems);
     for iel = 1 : Nelems
         coords = msh.p(:, msh.t(1:4, iel));
         
