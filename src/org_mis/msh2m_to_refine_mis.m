@@ -11,13 +11,7 @@ function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
     
     msh_iel = msh2m_quadtree(x_iel, y_iel);
     msh_iel = msh2m_refine_quadtree(msh_iel, 1);
-    
-    msh_iel.x_min    = msh.x_min;
-    msh_iel.x_sc_min = msh.x_sc_min;
-    msh_iel.x_sc_max = msh.x_sc_max;
-    msh_iel.x_max    = msh.x_max;
-    msh_iel.y_sc     = msh.y_sc;
-    msh_iel.y_ins    = msh.y_ins;
+    msh_iel.dim = msh.dim;
 
     # Build local matrix.
     x_iel = msh_iel.p(1, :).';

@@ -5,8 +5,8 @@ function [insulator] = insulator_elems(msh)
     for iel = 1 : Nelems
         coords = msh.p(:, msh.t(1:4, iel));
         
-        if (max(coords(1, :)) <= msh.x_sc_min ||
-            min(coords(1, :)) >= msh.x_sc_max ||
+        if (max(coords(1, :)) <= msh.dim.x_sc_min ||
+            min(coords(1, :)) >= msh.dim.x_sc_max ||
             min(coords(2, :)) >= 0)
             
             insulator(iel) = true;

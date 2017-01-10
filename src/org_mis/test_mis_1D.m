@@ -41,13 +41,12 @@ for i = 1 : 10
     x = msh.p(1, :).';
     y = msh.p(2, :).';
     
-    msh.x_min    = x_min;
-    msh.x_sc_min = x_sc_min;
-    msh.x_sc_max = x_sc_max;
-    msh.x_max    = x_max;
-    
-    msh.y_sc  = y_sc;
-    msh.y_ins = y_ins;
+    msh.dim.x_min    = x_min;
+    msh.dim.x_sc_min = x_sc_min;
+    msh.dim.x_sc_max = x_sc_max;
+    msh.dim.x_max    = x_max;
+    msh.dim.y_sc     = y_sc;
+    msh.dim.y_ins    = y_ins;
     
     # Define parameters.
     scnodes = semic_nodes(msh);
@@ -61,7 +60,7 @@ for i = 1 : 10
 
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = material.PhiB + (y - msh.y_sc) ./ (msh.y_ins - msh.y_sc) * Vg;
+    phi0 = material.PhiB + (y - msh.dim.y_sc) ./ (msh.dim.y_ins - msh.dim.y_sc) * Vg;
     
     # Bulk and gate contacts.
     bulk = msh2m_nodes_on_sides(msh, 1);
