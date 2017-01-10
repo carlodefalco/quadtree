@@ -19,18 +19,16 @@ quadrature.gw = gw;
 charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
-x_min    =  0;
-x_sc_min =  2e-6;
-x_sc_max =  8e-6;
-x_max    = 10e-6;
+x_min    =     0;
+x_sc_min =     0;
+x_sc_max = 35e-9;
+x_max    = 35e-9;
 
 y_sc  = -35e-9;
 y_ins = 441e-9;
 
-x = union(union(linspace(x_min, x_sc_min, 10),
-                linspace(x_sc_min, x_sc_max, 30)),
-                linspace(x_sc_max, x_max, 10));
-y = union(linspace(y_sc, 0, 5), linspace(0, y_ins, 20));
+x = linspace(x_sc_min, x_sc_max, 3);
+y = union(linspace(y_sc, 0, 10), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
@@ -52,7 +50,7 @@ for i = 1 : 10
     msh.y_ins = y_ins;
     
     # Define parameters.
-    scnodes = @(msh) semic_nodes(msh);
+    scnodes = semic_nodes(msh);
     insulator = @(msh) insulator_elems(msh);
     epsilon = @(msh) electrical_permittivity(msh, material, insulator(msh));
     
@@ -63,17 +61,18 @@ for i = 1 : 10
 
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = material.PhiB + (y - msh.y_sc) ./ (y - msh.y_ins) * Vg;
-    phi0(y == msh.y_ins) = material.PhiB + Vg; # Instead of Inf.
+    phi0 = material.PhiB + (y - msh.y_sc) ./ (msh.y_ins - msh.y_sc) * Vg;
     
     # Bulk and gate contacts.
-    dnodes = msh2m_nodes_on_sides(msh, [1 3]);
+    bulk = msh2m_nodes_on_sides(msh, 1);
+    gate = msh2m_nodes_on_sides(msh, 3);
+    dnodes = union(bulk, gate);
     
     # Compute solution and error.
     [phi, res, niter] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
     
     n = zeros(size(phi));
-    n(scnodes(msh)) = -charge_n(phi(scnodes(msh))) / constants.q;
+    n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
     
     # Save solution to file.
     fclose all;
@@ -84,7 +83,7 @@ for i = 1 : 10
     fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
 
     # Determine elements to be refined.
-    tol = 1e-2;
+    tol = 1e4;
     refineable_elements = find(!any(msh.children));
     
     to_refine = false(1, Nelems);
