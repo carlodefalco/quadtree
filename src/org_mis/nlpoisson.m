@@ -18,7 +18,7 @@ function [phiout, resnrm, iter] = ...
       
       res = (A * phiout - M * rho);
       
-      jac = A - M .* diag(drho);
+      jac = A - M .* sparse(diag(drho));
       
       dphi_bc = zeros(size(phi));
 

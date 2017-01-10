@@ -33,5 +33,5 @@ function [II, JJ, VV] = local_to_global (msh, delta, zeta, iel)
 endfunction
 
 function A_loc = local_matrix (hx, hy, delta_loc, zeta_loc)
-  A_loc = delta_loc * spdiags(zeta_loc(:), 0, 4) * hx * hy / 4;
+  A_loc = delta_loc * sparse(diag(zeta_loc)) * hx * hy / 4;
 endfunction
