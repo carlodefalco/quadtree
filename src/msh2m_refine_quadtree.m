@@ -58,7 +58,6 @@ function msh = do_refinement (msh, iel);
       msh.onboundary =  [msh.onboundary zeros(1, columns(p))];
       
       sides = unique(msh.e(5, :));
-      oncorner = @(ii) ismember (ii, sides);
       
       for ih = 1:4
         ihh = hanging(:, ih);
@@ -68,7 +67,7 @@ function msh = do_refinement (msh, iel);
           internal_boundary = false;
           
           if (any (ob))
-            oc = oncorner (ihh);
+            oc = oncorner (ihh, msh.e);
             if (all (ob))
               if (oc(1) && ! oc(2))
                 msh.onboundary (nni{ih}) = ob(2);
@@ -124,6 +123,17 @@ function msh = do_refinement (msh, iel);
 
 endfunction
 
+function res = oncorner(ihh, e)
+  res = zeros(size(ihh));
+  
+  for i = 1 : numel(res)
+    edges = find(e(1, :) == ihh(i) | e(2, :) == ihh(i));
+    if (numel(unique(e(5, edges))) != 1)
+      res(i) = 1;
+    endif
+  endfor
+endfunction
+
 %!test
 %! x = y = 1:2;
 %! msh = msh2m_refine_quadtree ...
@@ -148,4 +158,3 @@ endfunction
 %! 
 %! # Show refined mesh.
 %! figure; quadmesh(msh, "show_cell_numbers", "show_node_numbers");
-
