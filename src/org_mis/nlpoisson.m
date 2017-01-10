@@ -1,6 +1,8 @@
 ## Solve the non-linear Poisson problem using Newton's algorithm.
-function [phiout, nout, resnrm, iter] = ...
-         nlpoisson (device, material, constants, phi0, A, M, charge_n)
+function [phiout, resnrm, iter] = ...
+         nlpoisson(msh, phi0, A, M, dnodes, charge_n)
+  
+  non_hanging = find(msh.full_to_reduced);
   
   # Newton's algorithm.
   maxit = 1000;
@@ -10,34 +12,26 @@ function [phiout, nout, resnrm, iter] = ...
   phiout = phi0;
   
   for iter = 1 : maxit
-      phiout = phi;
+      phiout = phi(non_hanging);
       
       [rho, drho] = charge_n (phiout);
       
       res = (A * phiout - M * rho);
       
-      jac = A - M .* diag (drho);
+      jac = A - M .* diag(drho);
       
-      dphi_bc = zeros(size(phiout));
-      
-      # Bulk and gate contacts.
-      dnodes = msh2m_nodes_on_sides(device.msh, [1 3]);
-      dphi_bc(dnodes) = phi(dnodes) - phi0(dnodes);
+      dphi_bc = zeros(size(phi));
 
-      dphi = -bim2a_quadtree_solve(device.msh, jac, res, dphi_bc, dnodes);
+      dphi = -bim2a_quadtree_solve(msh, jac, res, dphi_bc, dnodes);
       
       phi += dphi;
       
       resnrm(iter) = norm(dphi, inf);
       
       if resnrm(iter) < tol
-        break;
+          break;
       endif
   endfor
   
   phiout = phi;
-  
-  # Post-processing.
-  nout = zeros(size(phiout));
-  nout(device.scnodes) = -charge_n(phiout(device.scnodes)) / constants.q;
 endfunction

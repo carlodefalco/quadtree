@@ -19,49 +19,86 @@ quadrature.gw = gw;
 charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
-L_sc  =  35e-9;
-L_ins = 441e-9;
-L_ov  =  10e-6;
+x_min    =  0;
+x_sc_min =  2e-6;
+x_sc_max =  8e-6;
+x_max    = 10e-6;
 
-x = linspace(0, L_ov, 100);
-y = linspace(-L_sc, L_ins, 50);
+y_sc  = -35e-9;
+y_ins = 441e-9;
 
-device.msh = msh2m_quadtree(x, y);
+x = union(union(linspace(x_min, x_sc_min, 10),
+                linspace(x_sc_min, x_sc_max, 30)),
+                linspace(x_sc_max, x_max, 10));
+y = union(linspace(y_sc, 0, 5), linspace(0, y_ins, 20));
 
-for i = 1 : 1
-    nnodes = columns(device.msh.p);
-    nelems  = columns(device.msh.t);
+msh = msh2m_quadtree(x, y);
 
-    device.scnodes = false(nnodes, 1);
-    device.scnodes(device.msh.p(2, :) <= 0) = true;
+for i = 1 : 10
+    fprintf("i = %d\n", i);
+    
+    Nnodes = columns(msh.p);
+    Nelems = columns(msh.t);
+    
+    x = msh.p(1, :).';
+    y = msh.p(2, :).';
+    
+    msh.x_min    = x_min;
+    msh.x_sc_min = x_sc_min;
+    msh.x_sc_max = x_sc_max;
+    msh.x_max    = x_max;
+    
+    msh.y_sc  = y_sc;
+    msh.y_ins = y_ins;
+    
+    # Define parameters.
+    scnodes = @(msh) semic_nodes(msh);
+    insulator = @(msh) insulator_elems(msh);
+    epsilon = @(msh) electrical_permittivity(msh, material, insulator(msh));
+    
+    # Assemble system.
+    A = @(msh) bim2a_quadtree_laplacian(msh, epsilon(msh));
 
-    device.insulator = false(nelems, 1);
-    for iel = 1 : nelems
-        coords = device.msh.p(:, device.msh.t(1:4, iel));
-        
-        if (min(coords(2, :)) >= 0)
-            device.insulator(iel) = true;
-        endif
-    endfor
+    M = @(msh) bim2a_quadtree_reaction(msh, !insulator(msh), ones(columns(msh.p), 1));
 
-    # Assemble system matrices.
-    epsilon = material.eps_semic * ones(nelems, 1);
-    epsilon(device.insulator) = material.eps_ins;
-
-    A = bim2a_quadtree_laplacian(device.msh, epsilon);
-
-    M = bim2a_quadtree_reaction(device.msh, !device.insulator, ones(nnodes, 1));
-
-    ## Initial guess
-    phi0 = repmat(linspace(material.PhiB, material.PhiB + 10, numel(y)), size(x)).';
-
-    [phi, n, res, niter] = nlpoisson(device, material, constants, ...
-                                     phi0, A, M, charge_n);
-
+    # Initial guess.
+    Vg = 10; # [V].
+    phi0 = material.PhiB + (y - msh.y_sc) ./ (y - msh.y_ins) * Vg;
+    phi0(y == msh.y_ins) = material.PhiB + Vg; # Instead of Inf.
+    
+    # Bulk and gate contacts.
+    dnodes = msh2m_nodes_on_sides(msh, [1 3]);
+    
+    # Compute solution and error.
+    [phi, res, niter] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
+    
+    n = zeros(size(phi));
+    n(scnodes(msh)) = -charge_n(phi(scnodes(msh))) / constants.q;
+    
+    # Save solution to file.
     fclose all;
-    filename = sprintf("sol_%d", i);
+    filename = sprintf("./sol_%d", i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
-    fpl_vtk_write_field_quadmesh(filename, device.msh, {phi, "phi"; n, "n"}, {}, 1);
+    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
+
+    # Determine elements to be refined.
+    tol = 1e-2;
+    refineable_elements = find(!any(msh.children));
+    
+    to_refine = false(1, Nelems);
+    to_refine(refineable_elements) = ...
+        parcellfun(4, @(iel) msh2m_to_refine_mis(msh, material, constants,
+                                                 A, M, phi, charge_n, iel, tol),
+                   num2cell(refineable_elements));
+    
+    fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
+    
+    # Do refinement.
+    if (!any(to_refine))
+        break;
+    else
+        msh = msh2m_refine_quadtree_recursive(msh, find(to_refine));
+    endif
 endfor
