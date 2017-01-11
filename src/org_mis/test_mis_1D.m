@@ -60,7 +60,8 @@ for i = 1 : 10
 
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = material.PhiB + (y - msh.dim.y_sc) ./ (msh.dim.y_ins - msh.dim.y_sc) * Vg;
+    phi0 = ((y - msh.dim.y_sc) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
+           (msh.dim.y_ins - msh.dim.y_sc);
     
     # Bulk and gate contacts.
     bulk = msh2m_nodes_on_sides(msh, 1);

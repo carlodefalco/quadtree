@@ -63,7 +63,8 @@ for i = 1 : 10
 
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = material.PhiB + (y - msh.dim.y_sc) ./ (msh.dim.y_ins - msh.dim.y_sc) * Vg;
+    phi0 = ((y - msh.dim.y_sc) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
+           (msh.dim.y_ins - msh.dim.y_sc);
     
     # Bulk and gate contacts.
     bulk = intersect(msh2m_nodes_on_sides(msh, 1), find(x <= msh.dim.x_bulk_max));
@@ -85,7 +86,7 @@ for i = 1 : 10
     fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
 
     # Determine elements to be refined.
-    tol = 1e4;
+    tol = 1e5;
     refineable_elements = find(!any(msh.children));
     
     to_refine = false(1, Nelems);
