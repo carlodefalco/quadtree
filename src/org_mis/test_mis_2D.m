@@ -28,9 +28,9 @@ y_sc  = -35e-9;
 y_ins = 441e-9;
 
 x = union([linspace(x_min, x_sc_max, 10), ...
-           linspace(x_sc_max, x_bulk_max, 5)],
-           linspace(x_bulk_max, x_max, 10));
-y = union(linspace(y_sc, 0, 5), linspace(0, y_ins, 5));
+           linspace(x_sc_max, x_bulk_max, 2)],
+           linspace(x_bulk_max, x_max, 5));
+y = union(linspace(y_sc, 0, 2), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
@@ -78,14 +78,14 @@ for i = 1 : 10
     
     # Save solution to file.
     fclose all;
-    filename = sprintf("./sol_%d", i);
+    filename = sprintf("./sol_MIS_2D/sol_%d", i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
     fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
 
     # Determine elements to be refined.
-    tol = 1e-2;
+    tol = 1e4;
     refineable_elements = find(!any(msh.children));
     
     to_refine = false(1, Nelems);

@@ -75,7 +75,7 @@ for i = 1 : 10
     
     # Save solution to file.
     fclose all;
-    filename = sprintf("./sol_%d", i);
+    filename = sprintf("./sol_MIS_1D/sol_%d", i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
