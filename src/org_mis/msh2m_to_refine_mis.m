@@ -6,17 +6,10 @@ function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
     x_iel = [min(msh.p(1, nodes)), max(msh.p(1, nodes))];
     y_iel = [min(msh.p(2, nodes)), max(msh.p(2, nodes))];
 
-    hx = diff(x_iel);
-    hy = diff(y_iel);
-    
     msh_iel = msh2m_quadtree(x_iel, y_iel);
     msh_iel = msh2m_refine_quadtree(msh_iel, 1);
     msh_iel.dim = msh.dim;
 
-    # Build local matrix.
-    x_iel = msh_iel.p(1, :).';
-    y_iel = msh_iel.p(2, :).';
-    
     # Assemble system.
     A_iel = A_fun(msh_iel);
     M_iel = M_fun(msh_iel);
@@ -36,5 +29,5 @@ function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
     # Compute solution and evaluate error.
     phi_iel = nlpoisson(msh_iel, phi_dnodes, A_iel, M_iel, dnodes_iel, charge_n);
     
-    to_refine = (abs(phi_iel(end) - mean(phi(nodes))) > tol * sqrt(hx * hy));
+    to_refine = (abs(phi_iel(end) - mean(phi(nodes))) > tol / (2^msh.level(iel)));
 endfunction

@@ -88,7 +88,7 @@ for i = 1 : 10
     fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
 
     # Determine elements to be refined.
-    tol = 1e5;
+    tol = 1e-2;
     refineable_elements = find(!any(msh.children));
     
     to_refine = false(1, Nelems);
