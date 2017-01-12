@@ -1,6 +1,6 @@
 function [t, varargout] = msh2m_quadtree_geometrical_properties (msh, varargin)
   ## Check inputs.
-  if (nargin < 2) # Number of input parameters
+  if (nargin < 2)
     error (["msh2m_quadtree_geometrical_properties: ", ...
             "wrong number of input parameters."]);
   elseif (! (isstruct (msh) && isfield (msh, "p") 
