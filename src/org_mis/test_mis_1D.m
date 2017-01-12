@@ -86,7 +86,7 @@ for i = 1 : 10
     save("-text", [filename "_capacitance.txt"], "C");
 
     # Determine elements to be refined.
-    tol = 1e-3;
+    tol = 5e-4;
     refineable_elements = find(!any(msh.children));
     
     to_refine = false(1, Nelems);

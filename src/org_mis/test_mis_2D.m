@@ -34,7 +34,7 @@ y = union(linspace(y_sc, 0, 2), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
-for i = 1 : 20
+for i = 1 : 15
     fprintf("i = %d\n", i);
     
     [msh] = bim2c_quadtree_mesh_properties(msh);
