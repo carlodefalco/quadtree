@@ -35,6 +35,8 @@ msh = msh2m_quadtree(x, y);
 for i = 1 : 10
     fprintf("i = %d\n", i);
     
+    [msh] = bim2c_quadtree_mesh_properties(msh);
+    
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
     
