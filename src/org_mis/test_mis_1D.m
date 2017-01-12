@@ -71,7 +71,7 @@ for i = 1 : 10
     dnodes = union(bulk, gate);
     
     # Compute solution and error.
-    [phi, res, niter] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
+    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
     
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
@@ -83,6 +83,7 @@ for i = 1 : 10
         delete([filename ".vtu"]);
     endif
     fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
+    save("-text", [filename "_capacitance.txt"], "C");
 
     # Determine elements to be refined.
     tol = 1e-3;
