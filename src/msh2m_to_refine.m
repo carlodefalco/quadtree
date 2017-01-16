@@ -34,5 +34,5 @@ function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     # Compute solution and evaluate error.
     u_iel = bim2a_quadtree_solve(msh_iel, A_iel, rhs_iel, u_dnodes, dnodes_iel);
     
-    to_refine = (abs(u_iel(end) - mean(u(nodes))) > tol * sqrt(hx * hy));
+    to_refine = (abs(u_iel(end) - mean(u(nodes))) > tol / (2^msh.level(iel)));
 endfunction
