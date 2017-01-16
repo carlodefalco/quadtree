@@ -14,8 +14,8 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   nsd = length(sdl); # Number of subdomains.
 
   ## Set list of output triangles.
-  elementlist=[];
-  for isd=1:nsd
+  elementlist = [];
+  for isd = 1 : nsd
     elementlist = [elementlist find(imesh.t(5,:) == sdl(isd))];
   endfor
 
@@ -26,16 +26,16 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   omesh.p  = imesh.p(:, nodelist);
 
   ## Use new node numbering in connectivity matrix.
-  indx(nodelist) = [1:length(nodelist)];
+  indx(nodelist) = 1 : length(nodelist);
   omesh.t(1:4, :) = indx(omesh.t(1:4, :));
 
   ## Set list of output edges.
-  omesh.e =[];
+  omesh.e = [];
   for isd=1:nsd
     omesh.e = [omesh.e imesh.e(:,imesh.e(7,:)==sdl(isd))];
     omesh.e = [omesh.e imesh.e(:,imesh.e(6,:)==sdl(isd))];
   endfor
-  omesh.e=unique(omesh.e',"rows")';
+  omesh.e = unique(omesh.e', "rows")';
 
   ## Use new node numbering in boundary segment list.
   omesh.e(1:2, :) = indx(omesh.e(1:2, :));
@@ -110,7 +110,7 @@ endfunction
 %!             zeros(2, ne);
 %!             5 * ones(1, ne);
 %!             ones(1, ne);
-%!             region(ones(1,ne))];
+%!             region(ones(1, ne))];
 %! 
 %! msh.e = [msh.e newedges];
 %! 
