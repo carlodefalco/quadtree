@@ -1,4 +1,4 @@
-function msh = msh2m_refine_quadtree (msh, refinelist)
+function msh = msh2m_quadtree_refine (msh, refinelist)
 
   for ii = 1 : numel (refinelist)
     msh = do_refinement (msh, refinelist(ii));
@@ -136,7 +136,7 @@ endfunction
 
 %!test
 %! x = y = 1:2;
-%! msh = msh2m_refine_quadtree ...
+%! msh = msh2m_quadtree_refine ...
 %!   (msh2m_quadtree (x, y, 1, 1:4), 1);
 %! assert (size (msh.p), [2 9]);
 
@@ -151,10 +151,10 @@ endfunction
 %! msh = msh2m_quadtree(x, y, region, sides);
 %! 
 %! # Mesh refinement.
-%! msh = msh2m_refine_quadtree(msh, [4, 8]);
-%! msh = msh2m_refine_quadtree(msh, [40 48 52]);
-%! msh = msh2m_refine_quadtree(msh, [44 12 43 59]);
-%! msh = msh2m_refine_quadtree(msh, [33 74 78]);
+%! msh = msh2m_quadtree_refine(msh, [4, 8]);
+%! msh = msh2m_quadtree_refine(msh, [40 48 52]);
+%! msh = msh2m_quadtree_refine(msh, [44 12 43 59]);
+%! msh = msh2m_quadtree_refine(msh, [33 74 78]);
 %! 
 %! # Show refined mesh.
 %! figure; quadmesh(msh, "show_cell_numbers", "show_node_numbers");

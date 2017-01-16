@@ -7,7 +7,7 @@ function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
     y_iel = [min(msh.p(2, nodes)), max(msh.p(2, nodes))];
 
     msh_iel = msh2m_quadtree(x_iel, y_iel);
-    msh_iel = msh2m_refine_quadtree(msh_iel, 1);
+    msh_iel = msh2m_quadtree_refine(msh_iel, 1);
     msh_iel.dim = msh.dim;
 
     # Assemble system.

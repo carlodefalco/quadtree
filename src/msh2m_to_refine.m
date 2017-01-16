@@ -8,7 +8,7 @@ function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     hy = diff(y_iel);
     
     msh_iel = msh2m_quadtree(x_iel, y_iel);
-    msh_iel = msh2m_refine_quadtree(msh_iel, 1);
+    msh_iel = msh2m_quadtree_refine(msh_iel, 1);
 
     # Build local matrix.
     x_iel = msh_iel.p(1, :).';

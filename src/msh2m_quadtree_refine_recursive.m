@@ -1,4 +1,4 @@
-function msh = msh2m_refine_quadtree_recursive(msh, refinelist)
+function msh = msh2m_quadtree_refine_recursive(msh, refinelist)
     for ii = 1 : numel(refinelist)
         msh = do_refinement_recursive(msh, refinelist(ii));
     endfor
@@ -9,7 +9,7 @@ function msh = do_refinement_recursive(msh, iel)
     hanging_nodes = msh.hanging(:, nodes);
     
     if (!any(hanging_nodes(:)))
-        msh = msh2m_refine_quadtree(msh, iel);
+        msh = msh2m_quadtree_refine(msh, iel);
         return;
     endif
     
@@ -44,10 +44,10 @@ function msh = do_refinement_recursive(msh, iel)
     neighbors = neighbors(is_hanging_neighbor);
     
     ## Refine all neighbors.
-    msh = msh2m_refine_quadtree_recursive(msh, neighbors);
+    msh = msh2m_quadtree_refine_recursive(msh, neighbors);
     
     ## Refine current element.
-    msh = msh2m_refine_quadtree_recursive(msh, iel);
+    msh = msh2m_quadtree_refine_recursive(msh, iel);
 endfunction
 
 %!demo
@@ -64,7 +64,7 @@ endfunction
 %!  msh = msh2m_quadtree(x, y, region, sides);
 %!  
 %!  # Try recursive refinement.
-%!  msh = msh2m_refine_quadtree_recursive (msh, 22);
-%!  msh = msh2m_refine_quadtree_recursive (msh, [84 81 98 106]);
+%!  msh = msh2m_quadtree_refine_recursive (msh, 22);
+%!  msh = msh2m_quadtree_refine_recursive (msh, [84 81 98 106]);
 %!  quadmesh(msh, "show_cell_numbers", "show_node_numbers");
 %!  
