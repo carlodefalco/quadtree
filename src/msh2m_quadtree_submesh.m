@@ -47,12 +47,19 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   omesh.children = imesh.children(:, elementlist);
   
   ## Use new node numbering in children list.
-  omesh.children(omesh.children != 0) = indx(omesh.children(omesh.children != 0));
+  where = (omesh.children != 0);
+  omesh.children(where) = indx(omesh.children(where));
   
   omesh.hanging         = imesh.hanging        (:, nodelist);
   omesh.onboundary      = imesh.onboundary     (:, nodelist);
+  
   omesh.reduced_to_full = imesh.reduced_to_full(:, nodelist);
   omesh.full_to_reduced = imesh.full_to_reduced(:, nodelist);
+  
+  ## Use new node numbering in reduced_to_full and full_to_reduced.
+  omesh.reduced_to_full = indx(omesh.reduced_to_full);
+  where = (omesh.full_to_reduced != 0);
+  omesh.full_to_reduced(where) = indx(omesh.full_to_reduced(where));
 endfunction
 
 %!demo
