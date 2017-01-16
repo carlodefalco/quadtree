@@ -1,10 +1,10 @@
-function msh = msh2m_quadtree_refine_recursive(msh, refinelist, to_refine = [])
+function msh = msh2m_quadtree_refine_recursive(msh, refinelist)
     for ii = 1 : numel(refinelist)
-        msh = do_refinement_recursive(msh, refinelist(ii), to_refine);
+        msh = do_refinement_recursive(msh, refinelist(ii));
     endfor
 endfunction
 
-function msh = do_refinement_recursive(msh, iel, to_refine)
+function msh = do_refinement_recursive(msh, iel)
     nodes = msh.t(1:4, iel);
     hanging_nodes = msh.hanging(:, nodes);
     
@@ -42,11 +42,6 @@ function msh = do_refinement_recursive(msh, iel, to_refine)
     endfor
     
     neighbors = neighbors(is_hanging_neighbor);
-    
-    # Ignore neighbors that are already marked to be refined.
-    if (!isempty(to_refine))
-        neighbors = setdiff(neighbors, find(to_refine(neighbors)));
-    endif
     
     ## Refine all neighbors.
     msh = msh2m_quadtree_refine_recursive(msh, neighbors);
