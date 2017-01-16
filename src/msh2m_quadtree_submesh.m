@@ -64,7 +64,7 @@ endfunction
 
 %!demo
 %! # Define mesh.
-%! n = 10;
+%! n = 11;
 %! 
 %! x = linspace(0, 1, n);
 %! y = linspace(0, 1, n);
@@ -95,6 +95,24 @@ endfunction
 %!         msh.e(7, iedge) = region + 1;
 %!     endif
 %! endfor
+%! 
+%! # Mark internal edges.
+%! l1 = flip(find(msh.p(1, :) >= 0.5 & msh.p(2, :) == 0.5));
+%! l2 = find(msh.p(1, :) == 0.5 & msh.p(2, :) >= 0.5);
+%! 
+%! mr1 = [l1(1:end-1) l2(1:end-1)];
+%! mr2 = [l1(2:end)   l2(2:end)  ];
+%! 
+%! ne = numel(mr1);
+%! 
+%! newedges = [mr1;
+%!             mr2;
+%!             zeros(2, ne);
+%!             5 * ones(1, ne);
+%!             ones(1, ne);
+%!             region(ones(1,ne))];
+%! 
+%! msh.e = [msh.e newedges];
 %! 
 %! # Extract and show submesh.
 %! msh = msh2m_quadtree_submesh(msh, region);
