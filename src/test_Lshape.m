@@ -67,7 +67,7 @@ for i = 1:10
     Nelements = columns(msh.t);
 
     # Assemble system.
-    D = @(msh) ones(columns(msh.t), 1);
+    D = @(msh) 1e-2 * ones(columns(msh.t), 1);
 
     A = @(msh) bim2a_quadtree_laplacian(msh, D(msh));
     
@@ -104,6 +104,6 @@ for i = 1:10
     if (!any(to_refine))
         break;
     else
-        msh = msh2m_quadtree_refine_recursive(msh, find(to_refine));
+        msh = msh2m_quadtree_refine_recursive(msh, find(to_refine), to_refine);
     endif
 endfor
