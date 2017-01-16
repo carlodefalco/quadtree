@@ -1,13 +1,13 @@
 function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   ## Check input.
-  if nargin != 2
+  if (nargin != 2)
     error("msh2m_submesh: wrong number of input parameters.");
   endif
-  if !isstruct(imesh)
+  if (!isstruct(imesh))
     error("msh2m_submesh: first input is not a valid mesh structure.");
   endif
-  if !isvector(sdl)
-    error("msh2m_submesh: third input is not a valid vector.");
+  if (!isvector(sdl))
+    error("msh2m_submesh: second input is not a valid vector.");
   endif
   
   ## Extract sub-mesh.
@@ -32,8 +32,8 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   ## Set list of output edges.
   omesh.e = [];
   for isd=1:nsd
-    omesh.e = [omesh.e imesh.e(:,imesh.e(7,:)==sdl(isd))];
-    omesh.e = [omesh.e imesh.e(:,imesh.e(6,:)==sdl(isd))];
+    omesh.e = [omesh.e imesh.e(:, imesh.e(7, :) == sdl(isd))];
+    omesh.e = [omesh.e imesh.e(:, imesh.e(6, :) == sdl(isd))];
   endfor
   omesh.e = unique(omesh.e', "rows")';
 
@@ -50,14 +50,15 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   where = (omesh.children != 0);
   omesh.children(where) = indx(omesh.children(where));
   
-  omesh.hanging         = imesh.hanging        (:, nodelist);
-  omesh.onboundary      = imesh.onboundary     (:, nodelist);
+  omesh.hanging    = imesh.hanging   (:, nodelist);
+  omesh.onboundary = imesh.onboundary(:, nodelist);
   
   omesh.reduced_to_full = imesh.reduced_to_full(:, nodelist);
   omesh.full_to_reduced = imesh.full_to_reduced(:, nodelist);
   
   ## Use new node numbering in reduced_to_full and full_to_reduced.
   omesh.reduced_to_full = indx(omesh.reduced_to_full);
+  
   where = (omesh.full_to_reduced != 0);
   omesh.full_to_reduced(where) = indx(omesh.full_to_reduced(where));
 endfunction
@@ -104,15 +105,18 @@ endfunction
 %! mr2 = [l1(2:end)   l2(2:end)  ];
 %! 
 %! ne = numel(mr1);
+%! newside = 5;
 %! 
 %! newedges = [mr1;
 %!             mr2;
 %!             zeros(2, ne);
-%!             5 * ones(1, ne);
-%!             ones(1, ne);
+%!             newside * ones(1, ne);
+%!             region(ones(1, ne));
 %!             region(ones(1, ne))];
 %! 
 %! msh.e = [msh.e newedges];
+%! 
+%! msh.onboundary(unique([l1 l2])) = newside;
 %! 
 %! # Extract and show submesh.
 %! msh = msh2m_quadtree_submesh(msh, region);

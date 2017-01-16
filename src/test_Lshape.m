@@ -43,15 +43,18 @@ mr1 = [l1(1:end-1) l2(1:end-1)];
 mr2 = [l1(2:end)   l2(2:end)  ];
 
 ne = numel(mr1);
+newside = 5;
 
 newedges = [mr1;
             mr2;
             zeros(2, ne);
-            5 * ones(1, ne);
-            ones(1, ne);
+            newside * ones(1, ne);
+            region(ones(1, ne));
             region(ones(1, ne))];
 
 msh.e = [msh.e newedges];
+
+msh.onboundary(unique([l1 l2])) = newside;
 
 # Extract submesh.
 msh = msh2m_quadtree_submesh(msh, region);
