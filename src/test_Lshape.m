@@ -39,14 +39,14 @@ endfor
 l1 = flip(find(msh.p(1, :) >= 0.5 & msh.p(2, :) == 0.5));
 l2 = find(msh.p(1, :) == 0.5 & msh.p(2, :) >= 0.5);
 
-mr1 = [l1(1:end-1) l2(1:end-1)];
-mr2 = [l1(2:end)   l2(2:end)  ];
+e1 = [l1(1:end-1) l2(1:end-1)];
+e2 = [l1(2:end)   l2(2:end)  ];
 
-ne = numel(mr1);
+ne = numel(e1);
 newside = 5;
 
-newedges = [mr1;
-            mr2;
+newedges = [e1;
+            e2;
             zeros(2, ne);
             newside * ones(1, ne);
             region(ones(1, ne));
