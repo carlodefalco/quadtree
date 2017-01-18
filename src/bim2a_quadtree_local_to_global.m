@@ -3,13 +3,13 @@ function [II, JJ, VV] = bim2a_quadtree_local_to_global(msh, A_loc, iel)
   idx = 1;
   
   for inode = 1:4
+    if (! any (msh.hanging(:, msh.t(inode, iel))))
+      loci = msh.full_to_reduced(msh.t(inode, iel));
+    else
+      loci = msh.full_to_reduced(msh.hanging(:, msh.t(inode, iel)).');
+    endif
+    
     for jnode = 1:4
-      if (! any (msh.hanging(:, msh.t(inode, iel))))
-        loci = msh.full_to_reduced(msh.t(inode, iel));
-      else
-        loci = msh.full_to_reduced(msh.hanging(:, msh.t(inode, iel)).');
-      endif
-      
       if (! any (msh.hanging(:, msh.t(jnode, iel))))
         locj = msh.full_to_reduced(msh.t(jnode, iel));
       else
