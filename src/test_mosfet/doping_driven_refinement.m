@@ -1,4 +1,4 @@
-function [marker, delta] = doping_driven_refinement (msh, doping, treshold)
+function [marker] = doping_driven_refinement (msh, doping, treshold)
 
   y     = signedlog (doping);
   delta = max (y(msh.t(1:4, :)), [], 1) - min (y(msh.t(1:4, :)), [], 1);
