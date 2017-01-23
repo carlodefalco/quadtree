@@ -32,12 +32,24 @@ function msh = msh2m_quadtree (x, y, region = 1, sides = [1:4]);
            sides(1*ones(1,numel(l1)-1)), sides(2*ones(1,numel(l2)-1)), sides(3*ones(1,numel(l3)-1)), sides(4*ones(1,numel(l4)-1))
            zeros(1, ne);
            region(ones(1,ne))];
-
+  
+  s1 = sort(msh.t(1:2,    :), 1);
+  s2 = sort(msh.t(2:3,    :), 1);
+  s3 = sort(msh.t(3:4,    :), 1);
+  s4 = sort(msh.t([4, 1], :), 1);
+  
+  allsides = [s1 s2 s3 s4]';
+  [sides, ~, jj] = unique(allsides, "rows");
+  msh.sides = sides.';
+  
+  msh.ts = reshape(jj, [], 4)';
   
   msh.level    = ones  (1, columns (msh.t));
   msh.parent   = zeros (1, columns (msh.t));
   msh.children = zeros (4, columns (msh.t));
   msh.hanging  = zeros (2, columns (msh.p));
+  
+  msh.hanging_sides = zeros (1, columns (msh.sides));
 
   msh.onboundary = zeros (1, columns (msh.p));
   for ib = 1 : 4

@@ -8,8 +8,9 @@ endfunction
 
 function msh = do_refinement (msh, iel);
   
-  nel = columns (msh.t);
   nn  = columns (msh.p);
+  nel = columns (msh.t);
+  ns  = columns (msh.sides);
 
   if (! any (msh.children (:, iel)))
     if (! any (msh.hanging (:, msh.t(1:4, iel))(:)))
@@ -51,13 +52,28 @@ function msh = do_refinement (msh, iel);
       level  = (msh.level(:, iel) + 1) * ones (1, 4);
       parent = iel * ones (1, 4);
       
-      msh.p        = cat (2, msh.p, p);
-      msh.t        = cat (2, msh.t, t);
+      msh.p = cat (2, msh.p, p);
+      msh.t = cat (2, msh.t, t);
+      
+      s1 = sort(t(1:2,    :), 1);
+      s2 = sort(t(2:3,    :), 1);
+      s3 = sort(t(3:4,    :), 1);
+      s4 = sort(t([4, 1], :), 1);
+      
+      allsides = [s1 s2 s3 s4].';
+      [sides, ~, jj] = unique(allsides, "rows");
+      sides = sides.';
+      msh.sides = cat (2, msh.sides, sides);
+      
+      msh.ts = cat (2, msh.ts, ns + reshape(jj, [], 4)');
+      
+      [msh.sides, ~, idx] = unique(msh.sides.', "rows");
+      msh.sides = msh.sides.';
+      msh.ts = idx(msh.ts);
+      
       msh.level    = cat (2, msh.level, level);
       msh.parent   = cat (2, msh.parent, parent);
       msh.onboundary =  [msh.onboundary zeros(1, columns(p))];
-      
-      sides = unique(msh.e(5, :));
       
       for ih = 1:4
         ihh = hanging(:, ih);
@@ -113,7 +129,20 @@ function msh = do_refinement (msh, iel);
       msh.children(:, iel) = nel + [1:4] .';
     endif
   endif
-
+  
+  msh.hanging_sides = zeros(1, columns(msh.sides));
+  
+  for ii = 1 : columns(msh.p)
+    idx = find(all(msh.sides == msh.hanging(:, ii)
+                   | flip(msh.sides) == msh.hanging(:, ii)));
+    
+    if (!isempty(idx))
+      sidelist = find(msh.sides(1, :) == ii
+                      | msh.sides(2, :) == ii);
+      
+      msh.hanging_sides(sidelist) = idx;
+    endif
+  endfor
 
   msh.reduced_to_full = find (! any (msh.hanging));
   tmp = 1 : columns (msh.reduced_to_full);
