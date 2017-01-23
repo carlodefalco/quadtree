@@ -61,8 +61,8 @@ endfunction
 function [out] = computearea(p, e, t, request)
   weight = 1/4 * ones(1, 4);
   
-  hx = p(1, t(1, :)) - p(1, t(2, :));
-  hy = p(2, t(1, :)) - p(2, t(3, :));
+  hx = p(1, t(2, :)) - p(1, t(1, :));
+  hy = p(2, t(3, :)) - p(2, t(1, :));
   
   jacdet = hx .* hy;
 

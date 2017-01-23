@@ -55,20 +55,22 @@ function msh = do_refinement (msh, iel);
       msh.p = cat (2, msh.p, p);
       msh.t = cat (2, msh.t, t);
       
-      s1 = sort(t(1:2,    :), 1);
-      s2 = sort(t(2:3,    :), 1);
-      s3 = sort(t(3:4,    :), 1);
-      s4 = sort(t([4, 1], :), 1);
+      s1 = sort(t(1:2,    :), 1); o1 = ones (1, columns(s1)); # 1: horizontal.
+      s2 = sort(t(2:3,    :), 1); o2 = zeros(1, columns(s2)); # 0: vertical.
+      s3 = sort(t(3:4,    :), 1); o3 = ones (1, columns(s3));
+      s4 = sort(t([4, 1], :), 1); o4 = zeros(1, columns(s4));
       
       allsides = [s1 s2 s3 s4].';
-      [sides, ~, jj] = unique(allsides, "rows");
-      sides = sides.';
-      msh.sides = cat (2, msh.sides, sides);
+      allorien = [o1 o2 o3 o4];
       
-      msh.ts = cat (2, msh.ts, ns + reshape(jj, [], 4)');
+      [sides, ii, jj] = unique(allsides, "rows");
+      msh.sides = cat (2, msh.sides, sides.');
+      msh.orien = cat (2, msh.orien, allorien(ii));
       
-      [msh.sides, ~, idx] = unique(msh.sides.', "rows");
-      msh.sides = msh.sides.';
+      msh.ts = cat (2, msh.ts, ns + reshape(jj, [], 4).');
+      
+      [sides, ~, idx] = unique(msh.sides.', "rows");
+      msh.sides = sides.';
       msh.ts = idx(msh.ts);
       
       msh.level    = cat (2, msh.level, level);

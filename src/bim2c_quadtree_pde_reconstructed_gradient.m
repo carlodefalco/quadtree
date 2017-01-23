@@ -1,4 +1,4 @@
-function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, u)
+function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
     Nnodes = columns(msh.p);
     
     du_x = du_y = zeros(Nnodes, 1);
@@ -11,8 +11,9 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, u)
         [~, sides] = ind2sub(size(msh.sides), find(msh.sides == ii));
         
         ## Ignore hanging edge parent.
-        parent = msh.hanging(msh.hanging_sides(sides) != 0);
-        sides(parent) = [];
+        sides(logical(msh.hanging_sides(sides))) = [];
+        
+        ## TODO.
     endfor
     
     ## Interpolate gradient at the hanging nodes.
