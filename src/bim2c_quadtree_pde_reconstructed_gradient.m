@@ -7,7 +7,7 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
     hanging = find(!msh.full_to_reduced);
     
     for ii = non_hanging
-        ## Compute adjacent sides (those sharing a node with current element).
+        ## Compute adjacent sides (those containing current node).
         [~, sides] = find(msh.sides == ii);
         
         ## Ignore hanging sides.
