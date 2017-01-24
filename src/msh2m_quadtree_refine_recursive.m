@@ -14,13 +14,9 @@ function msh = do_refinement_recursive(msh, iel)
     endif
     
     ## Compute neighbor elements (those sharing a node with current element).
-    # Linear indexing.
-    tmp = arrayfun(@(i) find(msh.t(1:4, :) == nodes(i)),
-                   1:numel(nodes), "UniformOutput", false);
-    
-    # Convert "tmp" to subscript indexing.
-    [~, neighbors] = ind2sub([4, columns(msh.t)], vertcat(tmp{:}));
-    neighbors = unique(neighbors);
+    [~, neighbors] = arrayfun(@(i) find(msh.t(1:4, :) == nodes(i)),
+                              1:numel(nodes), "UniformOutput", false);
+    neighbors = unique(vertcat(neighbors{:}));
     
     ## Ignore neighbors from an incompatible level.
     neighbors(msh.level(neighbors) != msh.level(iel) - 1) = [];
