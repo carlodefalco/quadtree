@@ -10,6 +10,7 @@ function [du] = bim2c_quadtree_pde_gradient(msh, u)
         orien = double(msh.orien(ii));
         h = diff(msh.p(2 - orien, side));
         
+        ## Compute tangential component of gradient at side ii.
         du(ii) = diff(u(side)) / h;
     endfor
 endfunction
