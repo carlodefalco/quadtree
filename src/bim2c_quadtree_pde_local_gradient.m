@@ -6,7 +6,7 @@ function [du_x, du_y] = bim2c_quadtree_pde_local_gradient(msh, u, iel)
     nodes = msh.t(1:4, iel)(:);
     
     hx = diff(msh.p(1, nodes([1, 2])));
-    hy = diff(msh.p(1, nodes([1, 3])));
+    hy = diff(msh.p(2, nodes([1, 3])));
     
     u_loc = u(nodes);
     
