@@ -55,10 +55,10 @@ function msh = do_refinement (msh, iel);
       msh.p = cat (2, msh.p, p);
       msh.t = cat (2, msh.t, t);
       
-      s1 = sort(t(1:2,    :), 1); o1 = ones (1, columns(s1)); # 1: horizontal.
-      s2 = sort(t(2:3,    :), 1); o2 = zeros(1, columns(s2)); # 0: vertical.
-      s3 = sort(t(3:4,    :), 1); o3 = ones (1, columns(s3));
-      s4 = sort(t([4, 1], :), 1); o4 = zeros(1, columns(s4));
+      s1 = sort(t(1:2,    :), 1); o1 = true (1, columns(s1)); # true : horizontal.
+      s2 = sort(t(2:3,    :), 1); o2 = false(1, columns(s2)); # false: vertical.
+      s3 = sort(t(3:4,    :), 1); o3 = true (1, columns(s3));
+      s4 = sort(t([4, 1], :), 1); o4 = false(1, columns(s4));
       
       allsides = [s1 s2 s3 s4].';
       allorien = [o1 o2 o3 o4];
@@ -69,9 +69,10 @@ function msh = do_refinement (msh, iel);
       
       msh.ts = cat (2, msh.ts, ns + reshape(jj, [], 4).');
       
-      [sides, ~, idx] = unique(msh.sides.', "rows");
+      [sides, ii, jj] = unique(msh.sides.', "rows");
       msh.sides = sides.';
-      msh.ts = idx(msh.ts);
+      msh.orien = msh.orien(ii);
+      msh.ts = jj(msh.ts);
       
       msh.level    = cat (2, msh.level, level);
       msh.parent   = cat (2, msh.parent, parent);
