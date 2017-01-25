@@ -90,7 +90,7 @@ for i = 1 : 10
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
     
     to_refine = false(1, Nelems);
-    to_refine(refineable_elements) = (estimator > tol / (2^msh.level(refineable_elements)));
+    to_refine(refineable_elements) = (estimator > tol ./ (2.^msh.level(refineable_elements)));
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
