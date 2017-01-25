@@ -39,5 +39,5 @@ function [estimator] = bim2c_quadtree_pde_ZZ_estimator_du(msh, u)
     
     ## Compute error estimator for each mesh element.
     err = (du_x_edge - du_x_node).^2 + (du_y_edge - du_y_node).^2;
-    estimator = sum(err .* msh.wjacdet(:, refineable_elements), 1);
+    estimator = sqrt(sum(err .* msh.wjacdet(:, refineable_elements), 1));
 endfunction
