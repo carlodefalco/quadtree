@@ -1,4 +1,6 @@
-function [t, varargout] = msh2m_quadtree_geometrical_properties (msh, varargin)
+function [t, nodes, weights, varargout] = ...
+  msh2m_quadtree_geometrical_properties (msh, nodes=[], weights=[], varargin)
+  
   ## Check inputs.
   if (nargin < 2)
     error (["msh2m_quadtree_geometrical_properties: ", ...
@@ -18,34 +20,45 @@ function [t, varargout] = msh2m_quadtree_geometrical_properties (msh, varargin)
   
   ## Sort vertices counterclockwise (starting from west).
   for iel = 1 : columns(t)
-    nodes = t(1:4, iel);
-    
-    x = p(1, nodes);
-    y = p(2, nodes);
+    x = p(1, t(1:4, iel));
+    y = p(2, t(1:4, iel));
     
     [~, idx] = sort(angle(complex(x - mean(x), y - mean(y))));
     
     t(1:4, iel) = t(idx, iel);
   endfor
   
-  ## Compute properties.
-  
-  for nn = 1 : length(varargin)
+  ## Define nodes and weights.
+  if (isempty(nodes) || isempty(weights))
+    [nodes, weights] = grule(3);
     
+    nodes = 0.5 + 0.5 * nodes;
+    weights /= 2;
+  endif
+  
+  if (!issorted(nodes))
+    [nodes, idx] = sort(nodes);
+    weights = weights(idx);
+  endif
+  
+  [X, Y] = meshgrid(nodes);
+  nodes = [X(:) Y(:)].';
+  
+  [W1, W2] = meshgrid(weights);
+  weights = (W1(:) .* W2(:)).';
+  
+  ## Compute properties.
+  for nn = 1 : length(varargin)
     request = varargin{nn};
     
     switch request
       # Weighted Jacobian determinant.
       case "wjacdet"
-        varargout{nn} = computearea(p, e, t, "wjac");
+        [nodes, varargout{nn}] = computearea(p, e, t, nodes, weights, "wjac");
       
       # Element areas.
       case "area"
-        varargout{nn} = computearea(p, e, t, "area");
-      
-      # Gradient of hat functions.
-      case "shg"
-        varargout{nn} = shapegrad(p, t);
+        [nodes, varargout{nn}] = computearea(p, e, t, nodes, weights, "area");
         
       otherwise
         warning (["msh2m_quadtree_geometrical_properties: ", ...
@@ -58,16 +71,24 @@ function [t, varargout] = msh2m_quadtree_geometrical_properties (msh, varargin)
 
 endfunction
 
-function [out] = computearea(p, e, t, request)
-  weight = 1/4 * ones(1, 4);
+function [nodes, out] = computearea(p, e, t, x, w, request)
+  x1 = p(1, t(1, :));
+  x2 = p(1, t(2, :));
   
-  hx = p(1, t(2, :)) - p(1, t(1, :));
-  hy = p(2, t(3, :)) - p(2, t(1, :));
+  y1 = p(2, t(1, :));
+  y2 = p(2, t(3, :));
+  
+  hx = x2 - x1;
+  hy = y2 - y1;
   
   jacdet = hx .* hy;
 
-  for i = 1 : numel(weight)
-    wjacdet(i, :) = jacdet .* weight(i);
+  wjacdet = zeros(numel(w), numel(jacdet));
+  nodes = zeros(2, numel(w), numel(jacdet));
+  
+  for i = 1 : numel(w)
+    wjacdet(i, :) = jacdet .* w(i);
+    nodes(:, i, :) = x1 + hx .* x(:, i);
   endfor
 
   if (request == "wjac")
@@ -75,30 +96,4 @@ function [out] = computearea(p, e, t, request)
   elseif (request == "area")
     out = sum(wjacdet, 1)';
   endif
-endfunction
-
-function [shg] = shapegrad(p, t)
-  x1 = p(1, t(1, :));
-  y1 = p(2, t(1, :));
-  
-  x2 = p(1, t(2, :));
-  y2 = p(2, t(2, :));
-  
-  x3 = p(1, t(3, :));
-  y3 = p(2, t(3, :));
-  
-  x4 = p(1, t(4, :));
-  y4 = p(2, t(4, :));
-
-  shg(1, 1, :) =  (y1 - y2);
-  shg(2, 1, :) =  (x1 - x2);
-  
-  shg(1, 2, :) = -(y2 - y2);
-  shg(2, 2, :) =  (x2 - x1);
-  
-  shg(1, 3, :) =  (y3 - y1);
-  shg(2, 3, :) = -(x3 - x1);
-  
-  shg(1, 4, :) =  (y4 - y1);
-  shg(2, 4, :) = -(x4 - x2);
 endfunction
