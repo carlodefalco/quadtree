@@ -22,7 +22,7 @@ u_ex = (x - 1/2) .* (y - 1/2);
 du_x_ex = (y - 1/2);
 du_y_ex = (x - 1/2);
 
-du = bim2c_quadtree_pde_side_gradient(msh, u_ex);
+du = bim2c_quadtree_pde_edge_gradient(msh, u_ex);
 [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du);
 
 boundary = msh2m_nodes_on_sides(msh, 1:4);

@@ -1,4 +1,4 @@
-function [du] = bim2c_quadtree_pde_side_gradient(msh, u)
+function [du] = bim2c_quadtree_pde_edge_gradient(msh, u)
     Nsides = columns(msh.sides);
     du = zeros(Nsides, 1);
     
