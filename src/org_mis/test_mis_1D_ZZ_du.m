@@ -84,7 +84,7 @@ for i = 1 : 10
     save("-text", [filename "_capacitance.txt"], "C");
 
     # Determine elements to be refined.
-    tol = 1e-1;
+    tol = 1e-2;
     refineable_elements = find(!any(msh.children));
     
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
