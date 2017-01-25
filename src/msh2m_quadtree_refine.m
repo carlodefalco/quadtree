@@ -143,6 +143,7 @@ function msh = do_refinement (msh, iel);
       sidelist = find(msh.sides(1, :) == ii
                       | msh.sides(2, :) == ii);
       
+      sidelist = sidelist(msh.orien(sidelist) == msh.orien(idx));
       msh.hanging_sides(sidelist) = idx;
     endif
   endfor

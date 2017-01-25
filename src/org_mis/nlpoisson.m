@@ -53,7 +53,7 @@ function [phiout, resnrm, iter, C] = ...
         delta_phi = bim2a_quadtree_solve(msh, mat, rhs, phi0, dnodes);
         
         # Compute capacitance.
-        gate = msh2m_nodes_on_sides(msh, 3);
+        gate = msh.full_to_reduced(msh2m_nodes_on_sides(msh, 3));
         C = abs(-sum(mat(gate, :) * delta_phi(non_hanging))) / (msh.dim.x_max - msh.dim.x_min);
     endif
 endfunction

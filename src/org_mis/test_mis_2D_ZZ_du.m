@@ -79,7 +79,7 @@ for i = 1 : 15
     
     # Save solution to file.
     fclose all;
-    filename = sprintf("./sol_MIS_2D/sol_%d", i);
+    filename = sprintf("./sol_MIS_2D_ZZ_du/sol_%d", i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
@@ -90,11 +90,10 @@ for i = 1 : 15
     tol = 1e-2;
     refineable_elements = find(!any(msh.children));
     
+    estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
+    
     to_refine = false(1, Nelems);
-    to_refine(refineable_elements) = ...
-        parcellfun(4, @(iel) msh2m_to_refine_mis(msh, material, constants,
-                                                 A, M, phi, charge_n, iel, tol),
-                   num2cell(refineable_elements));
+    to_refine(refineable_elements) = (estimator > tol);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     

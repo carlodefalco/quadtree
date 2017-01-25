@@ -34,8 +34,9 @@ du_y(boundary) = du_y_ex(boundary);
          bim2c_quadtree_mesh_properties(msh);
 
 nq = size(edge_space.shp, 2);
+ne = size(edge_space.connectivity);
 
-du = repmat(reshape(du(edge_space.connectivity), [1, size(msh.t)]), [nq, 1, 1]);
+du = repmat(reshape(du(edge_space.connectivity), [1, ne]), [nq, 1, 1]);
 ux_num = squeeze(sum(squeeze(edge_space.shp(1, :, :, :)) .* du, 2));
 uy_num = squeeze(sum(squeeze(edge_space.shp(2, :, :, :)) .* du, 2));
 

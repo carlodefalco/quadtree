@@ -19,22 +19,20 @@ quadrature.gw = gw;
 charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
-x_min      = 0.70e-6;
-x_sc_max   = 1.15e-6;
-x_bulk_max = 1.20e-6;
-x_max      = 1.40e-6;
+x_min    =     0;
+x_sc_min =     0;
+x_sc_max = 35e-9;
+x_max    = 35e-9;
 
 y_sc  = -35e-9;
 y_ins = 441e-9;
 
-x = union([linspace(x_min, x_sc_max, 10), ...
-           linspace(x_sc_max, x_bulk_max, 2)],
-           linspace(x_bulk_max, x_max, 5));
-y = union(linspace(y_sc, 0, 2), linspace(0, y_ins, 10));
+x = linspace(x_sc_min, x_sc_max, 3);
+y = union(linspace(y_sc, 0, 10), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
-for i = 1 : 15
+for i = 1 : 10
     fprintf("i = %d\n", i);
     
     Nnodes = columns(msh.p);
@@ -43,13 +41,12 @@ for i = 1 : 15
     x = msh.p(1, :).';
     y = msh.p(2, :).';
     
-    msh.dim.x_min      = x_min;
-    msh.dim.x_sc_min   = x_min;
-    msh.dim.x_sc_max   = x_sc_max;
-    msh.dim.x_bulk_max = x_bulk_max;
-    msh.dim.x_max      = x_max;
-    msh.dim.y_sc       = y_sc;
-    msh.dim.y_ins      = y_ins;
+    msh.dim.x_min    = x_min;
+    msh.dim.x_sc_min = x_sc_min;
+    msh.dim.x_sc_max = x_sc_max;
+    msh.dim.x_max    = x_max;
+    msh.dim.y_sc     = y_sc;
+    msh.dim.y_ins    = y_ins;
     
     # Define parameters.
     scnodes = semic_nodes(msh);
@@ -67,7 +64,7 @@ for i = 1 : 15
            (msh.dim.y_ins - msh.dim.y_sc);
     
     # Bulk and gate contacts.
-    bulk = intersect(msh2m_nodes_on_sides(msh, 1), find(x <= msh.dim.x_bulk_max));
+    bulk = msh2m_nodes_on_sides(msh, 1);
     gate = msh2m_nodes_on_sides(msh, 3);
     dnodes = union(bulk, gate);
     
@@ -79,7 +76,7 @@ for i = 1 : 15
     
     # Save solution to file.
     fclose all;
-    filename = sprintf("./sol_MIS_2D/sol_%d", i);
+    filename = sprintf("./sol_MIS_1D_ZZ_du/sol_%d", i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
@@ -87,14 +84,13 @@ for i = 1 : 15
     save("-text", [filename "_capacitance.txt"], "C");
 
     # Determine elements to be refined.
-    tol = 1e-2;
+    tol = 1e-1;
     refineable_elements = find(!any(msh.children));
     
+    estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
+    
     to_refine = false(1, Nelems);
-    to_refine(refineable_elements) = ...
-        parcellfun(4, @(iel) msh2m_to_refine_mis(msh, material, constants,
-                                                 A, M, phi, charge_n, iel, tol),
-                   num2cell(refineable_elements));
+    to_refine(refineable_elements) = (estimator > tol);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
