@@ -1,4 +1,4 @@
-function [t, nodes, weights, varargout] = ...
+function [t, varargout] = ...
   msh2m_quadtree_geometrical_properties (msh, nodes=[], weights=[], varargin)
   
   ## Check inputs.
@@ -54,11 +54,15 @@ function [t, nodes, weights, varargout] = ...
     switch request
       # Weighted Jacobian determinant.
       case "wjacdet"
-        [nodes, varargout{nn}] = computearea(p, e, t, nodes, weights, "wjac");
-      
+        varargout{nn} = computearea(p, e, t, nodes, weights, "wjac");
+        
+      # Quadrature nodes.
+      case "nodes"
+        varargout{nn} = computearea(p, e, t, nodes, weights, "quad");
+        
       # Element areas.
       case "area"
-        [nodes, varargout{nn}] = computearea(p, e, t, nodes, weights, "area");
+        varargout{nn} = computearea(p, e, t, nodes, weights, "area");
         
       otherwise
         warning (["msh2m_quadtree_geometrical_properties: ", ...
@@ -68,10 +72,9 @@ function [t, nodes, weights, varargout] = ...
     endswitch
 
   endfor
-
 endfunction
 
-function [nodes, out] = computearea(p, e, t, x, w, request)
+function [out] = computearea(p, e, t, x, w, request)
   x1 = p(1, t(1, :));
   x2 = p(1, t(2, :));
   
@@ -84,15 +87,22 @@ function [nodes, out] = computearea(p, e, t, x, w, request)
   jacdet = hx .* hy;
 
   wjacdet = zeros(numel(w), numel(jacdet));
-  nodes = zeros(2, numel(w), numel(jacdet));
   
   for i = 1 : numel(w)
     wjacdet(i, :) = jacdet .* w(i);
-    nodes(:, i, :) = x1 + hx .* x(:, i);
   endfor
 
   if (request == "wjac")
     out = wjacdet;
+  elseif (request == "quad")
+    nodes = zeros(2, numel(w), numel(jacdet));
+    
+    for i = 1 : numel(w)
+      nodes(1, i, :) = x1 + hx .* x(1, i);
+      nodes(2, i, :) = y1 + hy .* x(2, i);
+    endfor
+    
+    out = nodes;
   elseif (request == "area")
     out = sum(wjacdet, 1)';
   endif

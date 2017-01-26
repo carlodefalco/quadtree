@@ -32,7 +32,7 @@ y = union(linspace(y_sc, 0, 10), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
-for i = 1 : 10
+for i = 1 : 15
     fprintf("i = %d\n", i);
     
     Nnodes = columns(msh.p);
@@ -84,13 +84,13 @@ for i = 1 : 10
     save("-text", [filename "_capacitance.txt"], "C");
 
     # Determine elements to be refined.
-    tol = 1e-2;
-    refineable_elements = find(!any(msh.children));
+    to_refine = false(1, Nelems);
     
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
+    tol = quantile(estimator, 0.5);
     
-    to_refine = false(1, Nelems);
-    to_refine(refineable_elements) = (estimator > tol ./ (2.^msh.level(refineable_elements)));
+    refineable_elements = find(!any(msh.children));
+    to_refine(refineable_elements) = (estimator > tol);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
@@ -99,5 +99,6 @@ for i = 1 : 10
         break;
     else
         msh = msh2m_quadtree_refine_recursive(msh, find(to_refine));
+        msh.hanging_sides = msh2m_quadtree_hanging_sides(msh);
     endif
 endfor

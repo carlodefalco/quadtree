@@ -132,28 +132,12 @@ function msh = do_refinement (msh, iel);
       msh.children(:, iel) = nel + [1:4] .';
     endif
   endif
-  
-  msh.hanging_sides = zeros(1, columns(msh.sides));
-  
-  for ii = 1 : columns(msh.p)
-    idx = find(all(msh.sides == msh.hanging(:, ii)
-                   | flip(msh.sides) == msh.hanging(:, ii)));
-    
-    if (!isempty(idx))
-      sidelist = find(msh.sides(1, :) == ii
-                      | msh.sides(2, :) == ii);
-      
-      sidelist = sidelist(msh.orien(sidelist) == msh.orien(idx));
-      msh.hanging_sides(sidelist) = idx;
-    endif
-  endfor
 
   msh.reduced_to_full = find (! any (msh.hanging));
   tmp = 1 : columns (msh.reduced_to_full);
 
   msh.full_to_reduced = zeros (1, columns (msh.p));
   msh.full_to_reduced(1, msh.reduced_to_full) = tmp;
-
 endfunction
 
 function res = oncorner(ihh, e)

@@ -9,8 +9,8 @@ function [msh, edge_space, node_space] = ...
   endif
 
   ## Compute mesh properties.
-  [msh.t, msh.nodes, msh.weights, msh.wjacdet, msh.area] = ...
-      msh2m_quadtree_geometrical_properties(msh, nodes, weights, "wjacdet", "area");
+  [msh.t, msh.wjacdet, msh.nodes, msh.area] = ...
+      msh2m_quadtree_geometrical_properties(msh, nodes, weights, "wjacdet", "nodes", "area");
   
   ## Compute shape functions and connectivity for edge space.
   for iel = 1 : columns(msh.t)
