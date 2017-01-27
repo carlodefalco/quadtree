@@ -13,20 +13,15 @@ for i = 1 : numel(n)
 
     msh = msh2m_quadtree(x, y);
 
+    [msh, edge_space, node_space] = bim2c_quadtree_mesh_properties(msh);
+    Nquad = size(edge_space.shp, 2); # No. of quadrature nodes.
+
     x = msh.p(1, :).';
     y = msh.p(2, :).';
-
+    
     u_ex = sin(x) .* cos(2 * y);
     du_x_ex = cos(x) .* cos(2 * y);
     du_y_ex = -2 * sin(x) .* sin(2 * y);
-
-    du_edge_ex = zeros(columns(msh.sides), 1);
-    orien_x = (msh.orien == 1);
-    orien_y = (msh.orien == 0);
-    du_edge_ex(orien_x) = mean(du_x_ex(msh.sides(:, orien_x)));
-    du_edge_ex(orien_y) = mean(du_y_ex(msh.sides(:, orien_y)));
-    #du_edge_ex = bim2c_quadtree_pde_edge_gradient(msh, u_ex);
-    #[du_x_ex, du_y_ex] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge_ex);
     
     # Define parameters and exact solution.
     epsilon = 1;
@@ -44,24 +39,75 @@ for i = 1 : numel(n)
     rhs = bim2a_quadtree_rhs(msh, f(msh), g(x, y));
 
     u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
-
+    
+    # Compute numerical gradient on edge and node space.
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
     
-    ## Compute errors.
-    err_node(i) = norm([du_x; du_y] - [du_x_ex; du_y_ex], inf);
-    err_edge(i) = norm(du_edge - du_edge_ex, inf);
+    # Fix boundary values.
+    boundary = msh2m_nodes_on_sides(msh, 1:4);
+    du_x(boundary) = du_x_ex(boundary);
+    du_y(boundary) = du_y_ex(boundary);
+
+    # Evaluate exact gradient on quadrature nodes.
+    Nconn = size(node_space.connectivity);
+    
+    du_x_ex = reshape(du_x_ex(node_space.connectivity), [1, Nconn]);
+    du_x_ex = repmat(du_x_ex, [Nquad, 1, 1]);
+    
+    du_y_ex = reshape(du_y_ex(node_space.connectivity), [1, Nconn]);
+    du_y_ex = repmat(du_y_ex, [Nquad, 1, 1]);
+    
+    du_x_ex = squeeze(sum(node_space.shp .* du_x_ex, 2));
+    du_y_ex = squeeze(sum(node_space.shp .* du_y_ex, 2));
+    
+    # Evaluate edge gradient on quadrature nodes.
+    Nconn = size(edge_space.connectivity);
+    du_edge = reshape(du_edge(edge_space.connectivity), [1, Nconn]);
+    du_edge = repmat(du_edge, [Nquad, 1, 1]);
+    
+    du_x_edge = squeeze(sum(squeeze(edge_space.shp(1, :, :, :)) .* du_edge, 2));
+    du_y_edge = squeeze(sum(squeeze(edge_space.shp(2, :, :, :)) .* du_edge, 2));
+    
+    # Evaluate node gradient on quadrature nodes.
+    Nconn = size(node_space.connectivity);
+    du_x = reshape(du_x(node_space.connectivity), [1, Nconn]);
+    du_x = repmat(du_x, [Nquad, 1, 1]);
+    
+    du_y = reshape(du_y(node_space.connectivity), [1, Nconn]);
+    du_y = repmat(du_y, [Nquad, 1, 1]);
+    
+    du_x_node = squeeze(sum(node_space.shp .* du_x, 2));
+    du_y_node = squeeze(sum(node_space.shp .* du_y, 2));
+    
+    # Compute errors.
+    err = (du_x_edge - du_x_ex).^2 + (du_y_edge - du_y_ex).^2;
+    err_edge = sqrt(sum(err .* msh.wjacdet, 1));
+    err_edge_norm(i) = sqrt(sum(err_edge.^2));
+    
+    err = (du_x_node - du_x_ex).^2 + (du_y_node - du_y_ex).^2;
+    err_node = sqrt(sum(err .* msh.wjacdet, 1));
+    err_node_norm(i) = sqrt(sum(err_node.^2));
+    
+    # Save solution to file.
+    fclose all;
+    filename = sprintf("sol_%d", i);
+    if (exist([filename ".vtu"], "file"))
+        delete([filename ".vtu"]);
+    endif
+    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"},
+                                 {err_edge.', "err_edge"; err_node.', "err_node"}, 1);
 endfor
 
 h = 1 ./ n;
 figure;
-loglog(h, err_node, h, h);
+loglog(h, err_node_norm, h, h.^2);
 xlabel("h");
 ylabel("err");
-legend("Error on node space", "Order 1");
+legend("Error on node space", "Order 2");
 
 figure;
-loglog(h, err_edge, h, h.^2);
+loglog(h, err_edge_norm, h, h);
 xlabel("h");
 ylabel("err");
-legend("Error on edge space", "Order 2");
+legend("Error on edge space", "Order 1");
