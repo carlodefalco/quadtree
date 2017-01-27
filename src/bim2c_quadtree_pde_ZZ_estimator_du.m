@@ -11,17 +11,14 @@ function [estimator] = bim2c_quadtree_pde_ZZ_estimator_du(msh, u)
     Nquad = size(edge_space.shp, 2); # No. of quadrature nodes.
     
     ## Compute gradient on edge space.
-    Nconn = size(edge_space.connectivity);
-    
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     
     ## Compute reconstructed gradient on node space.
-    Nconn = size(node_space.connectivity);
-    
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
     
     
     # Evaluate du_edge on quadrature nodes for each mesh element.
+    Nconn = size(edge_space.connectivity);
     du_edge = reshape(du_edge(edge_space.connectivity), [1, Nconn]);
     du_edge = repmat(du_edge, [Nquad, 1, 1]);
     
@@ -29,6 +26,7 @@ function [estimator] = bim2c_quadtree_pde_ZZ_estimator_du(msh, u)
     du_y_edge = squeeze(sum(squeeze(edge_space.shp(2, :, :, :)) .* du_edge, 2));
     
     # Evaluate du_node on quadrature nodes for each element.
+    Nconn = size(node_space.connectivity);
     du_x = reshape(du_x(node_space.connectivity), [1, Nconn]);
     du_x = repmat(du_x, [Nquad, 1, 1]);
     
