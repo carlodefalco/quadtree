@@ -32,6 +32,9 @@ y = union(linspace(y_sc, 0, 10), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
+tol = 1e-3;
+Nelems_max = 10000;
+
 for i = 1 : 15
     fprintf("i = %d\n", i);
     
@@ -87,15 +90,15 @@ for i = 1 : 15
     to_refine = false(1, Nelems);
     
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
-    tol = quantile(estimator, 0.5);
+    threshold = mean(estimator);
     
     refineable_elements = find(!any(msh.children));
-    to_refine(refineable_elements) = (estimator > tol);
+    to_refine(refineable_elements) = (estimator > threshold);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
     # Do refinement.
-    if (!any(to_refine))
+    if (Nelems >= Nelems_max || (threshold < tol / Nelems) || !any(to_refine))
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));

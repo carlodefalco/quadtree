@@ -13,12 +13,15 @@ sides = 1:4;
 
 msh = msh2m_quadtree(x, y, region, sides);
 
+tol = 1e-3;
+Nelems_max = 10000;
+
 for i = 1:10
     fprintf("i = %d\n", i);
     
     # Build global matrix.
     Nnodes = columns(msh.p);
-    Nelements = columns(msh.t);
+    Nelems = columns(msh.t);
 
     # Define parameters and exact solution.
     epsilon = 1e-2;
@@ -61,17 +64,17 @@ for i = 1:10
     fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"}, {}, 1);
 
     # Determine elements to be refined.
-    tol = 1e-2;
-    refineable_elements = find(!any(msh.children));
+    to_refine = false(1, Nelems);
     
-    to_refine = false(1, Nelements);
-    to_refine(refineable_elements) = ...
-        parcellfun(4, @(iel) msh2m_to_refine(msh, A, rhs, u, iel, tol),
-                   num2cell(refineable_elements));
+    estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
+    threshold = mean(estimator);
+    
+    refineable_elements = find(!any(msh.children));
+    to_refine(refineable_elements) = (estimator > threshold);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
-    if (!any(to_refine))
+    if (Nelems >= Nelems_max || (threshold < tol / Nelems) || !any(to_refine))
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));
