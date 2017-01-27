@@ -1,13 +1,54 @@
-function msh = msh2m_quadtree_refine (msh, refinelist)
+function msh = msh2m_quadtree_refine(msh, refinelist)
+    for ii = 1 : numel(refinelist)
+        msh = do_refinement_recursive(msh, refinelist(ii));
+    endfor
+    
+    msh.hanging_sides = msh2m_quadtree_hanging_sides(msh);
+endfunction
 
-  for ii = 1 : numel (refinelist)
-    msh = do_refinement (msh, refinelist(ii));
-  endfor
-  
+function msh = do_refinement_recursive(msh, iel)
+    nodes = msh.t(1:4, iel);
+    hanging_nodes = msh.hanging(:, nodes);
+    
+    if (!any(hanging_nodes(:)))
+        msh = do_refinement(msh, iel);
+        return;
+    endif
+    
+    ## Compute neighbor elements (those sharing a node with current element).
+    [~, neighbors] = arrayfun(@(i) find(msh.t(1:4, :) == nodes(i)),
+                              1:numel(nodes), "UniformOutput", false);
+    neighbors = unique(vertcat(neighbors{:}));
+    
+    ## Ignore neighbors from an incompatible level.
+    neighbors(msh.level(neighbors) != msh.level(iel) - 1) = [];
+    
+    # Ignore current element and its parent.
+    neighbors = setdiff(neighbors, [iel, msh.parent(iel)]);
+    
+    # Ignore neighbors not containing current element hanging nodes.
+    is_hanging_neighbor = false(size(neighbors));
+    
+    for i = 1 : numel(neighbors)
+        for j = 1 : columns(hanging_nodes)
+            # Mark i-th neighbor if it contains j-th hanging node.
+            if (sum(ismember(hanging_nodes(:, j), msh.t(1:4, neighbors(i)))) == 2)
+                is_hanging_neighbor(i) = true;
+                break;
+            endif
+        endfor
+    endfor
+    
+    neighbors = neighbors(is_hanging_neighbor);
+    
+    ## Refine all neighbors.
+    msh = msh2m_quadtree_refine(msh, neighbors);
+    
+    ## Refine current element.
+    msh = msh2m_quadtree_refine(msh, iel);
 endfunction
 
 function msh = do_refinement (msh, iel);
-  
   nn  = columns (msh.p);
   nel = columns (msh.t);
   ns  = columns (msh.sides);
@@ -175,3 +216,23 @@ endfunction
 %! 
 %! # Show refined mesh.
 %! figure; quadmesh(msh, "show_cell_numbers", "show_node_numbers");
+
+
+%!demo
+%! # Mesh definition.
+%! 
+%! n = 10;
+%! 
+%! x = linspace(0, 1, n);
+%! y = linspace(0, 2, n);
+%! 
+%! region = 1;
+%! sides = 1:4;
+%! 
+%! msh = msh2m_quadtree(x, y, region, sides);
+%! 
+%! # Refinement.
+%! msh = msh2m_quadtree_refine (msh, 22);
+%! msh = msh2m_quadtree_refine (msh, [84 81 98 106]);
+%! quadmesh(msh, "show_cell_numbers", "show_node_numbers");
+%! 

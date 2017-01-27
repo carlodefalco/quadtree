@@ -104,6 +104,6 @@ for i = 1:10
     if (!any(to_refine))
         break;
     else
-        msh = msh2m_quadtree_refine_recursive(msh, find(to_refine));
+        msh = msh2m_quadtree_refine(msh, find(to_refine));
     endif
 endfor

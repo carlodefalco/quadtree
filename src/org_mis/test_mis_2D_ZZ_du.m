@@ -101,7 +101,6 @@ for i = 1 : 15
     if (!any(to_refine))
         break;
     else
-        msh = msh2m_quadtree_refine_recursive(msh, find(to_refine));
-        msh.hanging_sides = msh2m_quadtree_hanging_sides(msh);
+        msh = msh2m_quadtree_refine(msh, find(to_refine));
     endif
 endfor

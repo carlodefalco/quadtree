@@ -23,7 +23,7 @@ for i = 1 : 5
     fpl_vtk_write_field_quadmesh (filename, msh,
                                   {Na, "Na"; Nd, "Nd"; (Nd - Na), "D"}, {}, 1);
 
-    msh = msh2m_quadtree_refine_recursive(msh, find(marker));
+    msh = msh2m_quadtree_refine(msh, find(marker));
     
     fprintf("%d\n", sum(marker));
 end
