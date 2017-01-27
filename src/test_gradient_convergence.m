@@ -80,7 +80,7 @@ for i = 1 : numel(n)
     du_x_node = squeeze(sum(node_space.shp .* du_x, 2));
     du_y_node = squeeze(sum(node_space.shp .* du_y, 2));
     
-    # Compute errors.
+    # Compute errors and estimator.
     err = (du_x_edge - du_x_ex).^2 + (du_y_edge - du_y_ex).^2;
     err_edge = sqrt(sum(err .* msh.wjacdet, 1));
     err_edge_norm(i) = sqrt(sum(err_edge.^2));
@@ -89,6 +89,8 @@ for i = 1 : numel(n)
     err_node = sqrt(sum(err .* msh.wjacdet, 1));
     err_node_norm(i) = sqrt(sum(err_node.^2));
     
+    estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
+    
     # Save solution to file.
     fclose all;
     filename = sprintf("sol_%d", i);
@@ -96,7 +98,7 @@ for i = 1 : numel(n)
         delete([filename ".vtu"]);
     endif
     fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"},
-                                 {err_edge.', "err_edge"; err_node.', "err_node"}, 1);
+                                 {err_edge.', "err_edge"; err_node.', "err_node"; estimator.', "estimator"}, 1);
 endfor
 
 h = 1 ./ n;
