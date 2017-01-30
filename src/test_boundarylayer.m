@@ -13,7 +13,7 @@ sides = 1:4;
 
 msh = msh2m_quadtree(x, y, region, sides);
 
-tol = 1e-3;
+threshold = 1e-3;
 Nelems_max = 10000;
 
 for i = 1:10
@@ -67,14 +67,14 @@ for i = 1:10
     to_refine = false(1, Nelems);
     
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
-    threshold = mean(estimator);
+    tol = mean(estimator);
     
     refineable_elements = find(!any(msh.children));
-    to_refine(refineable_elements) = (estimator > threshold);
+    to_refine(refineable_elements) = (estimator > tol);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
-    if (Nelems >= Nelems_max || (threshold < tol / Nelems) || !any(to_refine))
+    if (Nelems >= Nelems_max || (tol <= threshold / Nelems))
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));
