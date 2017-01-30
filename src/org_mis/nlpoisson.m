@@ -54,6 +54,7 @@ function [phiout, resnrm, iter, C] = ...
         
         # Compute capacitance.
         gate = msh.full_to_reduced(msh2m_nodes_on_sides(msh, 3));
-        C = abs(-sum(mat(gate, :) * delta_phi(non_hanging))) / (msh.dim.x_max - msh.dim.x_min);
+        delta_Q = sum(mat(gate, :) * delta_phi(non_hanging));
+        C = delta_Q / (msh.dim.x_max - msh.dim.x_min); # Per unit length.
     endif
 endfunction
