@@ -21,12 +21,62 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
         sides_x_nodes = msh.sides(:, sides_x);
         sides_y_nodes = msh.sides(:, sides_y);
         
-        h_x = abs(diff(reshape(msh.p(1, sides_x_nodes), size(sides_x_nodes)))).';
-        h_y = abs(diff(reshape(msh.p(2, sides_y_nodes), size(sides_y_nodes)))).';
+        hx = abs(diff(reshape(msh.p(1, sides_x_nodes), size(sides_x_nodes)))).';
+        hy = abs(diff(reshape(msh.p(2, sides_y_nodes), size(sides_y_nodes)))).';
         
-        ## Compute the reconstructed gradient.
-        du_x(ii) = sum(du(sides_x) ./ h_x) / sum(1 ./ h_x);
-        du_y(ii) = sum(du(sides_y) ./ h_y) / sum(1 ./ h_y);
+        ## Compute the reconstructed gradient along x.
+        if (numel(sides_x) == 1)
+            neighbor_node = setdiff(sides_x_nodes, ii);
+            [~, neighbors] = find(msh.sides == neighbor_node);
+            
+            # Ignore current side.
+            neighbors = setdiff(neighbors, sides_x);
+            
+            # Ignore vertical sides.
+            neighbors = neighbors(msh.orien(neighbors));
+            
+            neighbors_nodes = msh.sides(:, neighbors);
+            hx_neighbors = abs(diff(reshape(msh.p(1, neighbors_nodes), ...
+                                            size(neighbors_nodes)))).';
+            
+            # If neighbor_node shares other two sides,
+            # then discard the largest one.
+            [hx_neighbor, idx] = min(hx_neighbors);
+            neighbor = neighbors(idx);
+            
+            sides_x = [sides_x; neighbor];
+            weights_x = [1/hx + 2/hx_neighbor; -1/hx_neighbor];
+        else
+            weights_x = 1 ./ hx;
+        endif
+        
+        if (numel(sides_y) == 1)
+            neighbor_node = setdiff(sides_y_nodes, ii);
+            [~, neighbors] = find(msh.sides == neighbor_node);
+            
+            # Ignore current side.
+            neighbors = setdiff(neighbors, sides_y);
+            
+            # Ignore vertical sides.
+            neighbors = neighbors(!msh.orien(neighbors));
+            
+            neighbors_nodes = msh.sides(:, neighbors);
+            hy_neighbors = abs(diff(reshape(msh.p(2, neighbors_nodes), ...
+                                            size(neighbors_nodes)))).';
+            
+            # If neighbor_node shares other two sides,
+            # then discard the largest one.
+            [hy_neighbor, idx] = min(hy_neighbors);
+            neighbor = neighbors(idx);
+            
+            sides_y = [sides_y; neighbor];
+            weights_y = [1/hy + 2/hy_neighbor; -1/hy_neighbor];
+        else
+            weights_y = 1 ./ hy;
+        endif
+        
+        du_x(ii) = sum(du(sides_x) .* weights_x) / sum(weights_x);
+        du_y(ii) = sum(du(sides_y) .* weights_y) / sum(weights_y);
     endfor
     
     ## Interpolate gradient at the hanging nodes.
