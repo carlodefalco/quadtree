@@ -35,41 +35,42 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
             # Ignore vertical sides.
             neighbors = neighbors(msh.orien(neighbors));
             
+            # Ignore hanging sides.
+            neighbors(find(msh.hanging_sides(neighbors))) = [];
+            
+            # Compute hx.
             neighbors_nodes = msh.sides(:, neighbors);
-            hx_neighbors = abs(diff(reshape(msh.p(1, neighbors_nodes), ...
-                                            size(neighbors_nodes)))).';
+            hx_neighbor = abs(diff(reshape(msh.p(1, neighbors_nodes), ...
+                                           size(neighbors_nodes)))).';
             
-            # If neighbor_node shares other two sides,
-            # then discard the largest one.
-            [hx_neighbor, idx] = min(hx_neighbors);
-            neighbor = neighbors(idx);
-            
-            sides_x = [sides_x; neighbor];
+            # Add neighbor to sides_x list and compute weights.
+            sides_x = [sides_x; neighbors];
             weights_x = [1/hx + 2/hx_neighbor; -1/hx_neighbor];
         else
             weights_x = 1 ./ hx;
         endif
         
-        if (numel(sides_y) == 1)
+        ## Compute the reconstructed gradient along y.
+        if (numel(sides_y) == 1) # Boundary nodes.
             neighbor_node = setdiff(sides_y_nodes, ii);
             [~, neighbors] = find(msh.sides == neighbor_node);
             
             # Ignore current side.
             neighbors = setdiff(neighbors, sides_y);
             
-            # Ignore vertical sides.
+            # Ignore horizontal sides.
             neighbors = neighbors(!msh.orien(neighbors));
             
-            neighbors_nodes = msh.sides(:, neighbors);
-            hy_neighbors = abs(diff(reshape(msh.p(2, neighbors_nodes), ...
-                                            size(neighbors_nodes)))).';
+            # Ignore hanging sides.
+            neighbors(find(msh.hanging_sides(neighbors))) = [];
             
-            # If neighbor_node shares other two sides,
-            # then discard the largest one.
-            [hy_neighbor, idx] = min(hy_neighbors);
-            neighbor = neighbors(idx);
+            # Compute hy.
+            neighbor_nodes = msh.sides(:, neighbors);
+            hy_neighbor = abs(diff(reshape(msh.p(2, neighbor_nodes), ...
+                                           size(neighbor_nodes)))).';
             
-            sides_y = [sides_y; neighbor];
+            # Add neighbor to sides_y list and compute weights.
+            sides_y = [sides_y; neighbors];
             weights_y = [1/hy + 2/hy_neighbor; -1/hy_neighbor];
         else
             weights_y = 1 ./ hy;

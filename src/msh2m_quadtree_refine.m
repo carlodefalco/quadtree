@@ -3,16 +3,39 @@ function msh = msh2m_quadtree_refine(msh, refinelist)
         msh = do_refinement_recursive(msh, refinelist(ii));
     endfor
     
-    ## Rebuild hanging sides.
+    # Rebuild mesh sides (only for refineable elements).
+    refineable_elements = find(!any(msh.children));
+    
+    s1 = sort(msh.t(1:2,    refineable_elements), 1);
+    s2 = sort(msh.t(2:3,    refineable_elements), 1);
+    s3 = sort(msh.t(3:4,    refineable_elements), 1);
+    s4 = sort(msh.t([4, 1], refineable_elements), 1);
+    
+    o1 = true (1, columns(s1)); # true : horizontal.
+    o2 = false(1, columns(s2)); # false: vertical.
+    o3 = true (1, columns(s3));
+    o4 = false(1, columns(s4));
+    
+    allsides = [s1 s2 s3 s4].';
+    allorien = [o1 o2 o3 o4];
+    
+    [sides, ii, jj] = unique(allsides, "rows");
+    msh.sides = sides.';
+    msh.orien = allorien(ii);
+    
+    msh.ts = zeros(4, columns(msh.t));
+    msh.ts(:, refineable_elements) = reshape(jj, [], 4).';
+    
+    ## Compute hanging sides.
     msh.hanging_sides = zeros(1, columns(msh.sides));
     
     for ii = 1 : columns(msh.p)
         idx = find(all(msh.sides == msh.hanging(:, ii)
                        | flip(msh.sides) == msh.hanging(:, ii)));
         
+        # Determine index of the parent side.
         if (!isempty(idx))
-            sidelist = find(msh.sides(1, :) == ii
-                            | msh.sides(2, :) == ii);
+            sidelist = find(any(ismember(msh.sides, ii)));
             
             sidelist = sidelist(msh.orien(sidelist) == msh.orien(idx));
             msh.hanging_sides(sidelist) = idx;
@@ -109,25 +132,6 @@ function msh = do_refinement (msh, iel);
       
       msh.p = cat (2, msh.p, p);
       msh.t = cat (2, msh.t, t);
-      
-      s1 = sort(t(1:2,    :), 1); o1 = true (1, columns(s1)); # true : horizontal.
-      s2 = sort(t(2:3,    :), 1); o2 = false(1, columns(s2)); # false: vertical.
-      s3 = sort(t(3:4,    :), 1); o3 = true (1, columns(s3));
-      s4 = sort(t([4, 1], :), 1); o4 = false(1, columns(s4));
-      
-      allsides = [s1 s2 s3 s4].';
-      allorien = [o1 o2 o3 o4];
-      
-      [sides, ii, jj] = unique(allsides, "rows");
-      msh.sides = cat (2, msh.sides, sides.');
-      msh.orien = cat (2, msh.orien, allorien(ii));
-      
-      msh.ts = cat (2, msh.ts, ns + reshape(jj, [], 4).');
-      
-      [sides, ii, jj] = unique(msh.sides.', "rows");
-      msh.sides = sides.';
-      msh.orien = msh.orien(ii);
-      msh.ts = jj(msh.ts);
       
       msh.level    = cat (2, msh.level, level);
       msh.parent   = cat (2, msh.parent, parent);
