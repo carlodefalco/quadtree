@@ -72,6 +72,12 @@ for i = 1:10
     refineable_elements = find(!any(msh.children));
     to_refine(refineable_elements) = (estimator > tol);
     
+    # Save results from current iteration.
+    n_dofs(i) = sum(!any(msh.hanging));
+    n_elems(i) = numel(refineable_elements);
+    n_to_refine(i) = sum(to_refine);
+    err(i) = norm(estimator, 2);
+    
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
     if (Nelems >= Nelems_max || (tol <= tol_max / Nelems))
@@ -80,3 +86,6 @@ for i = 1:10
         msh = msh2m_quadtree_refine(msh, find(to_refine));
     endif
 endfor
+
+save("-text", [filename "_results.txt"], ...
+     "n_dofs", "n_elems", "n_to_refine", "err");

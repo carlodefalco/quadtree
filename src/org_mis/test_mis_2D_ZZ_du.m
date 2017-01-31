@@ -35,7 +35,7 @@ y = union(linspace(y_sc, 0, 2), linspace(0, y_ins, 10));
 msh = msh2m_quadtree(x, y);
 
 tol_max = 1e-3;
-Nelems_max = 10000;
+Nelems_max = 15000;
 
 for i = 1 : 15
     fprintf("i = %d\n", i);
@@ -87,7 +87,6 @@ for i = 1 : 15
         delete([filename ".vtu"]);
     endif
     fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
-    save("-text", [filename "_capacitance.txt"], "C");
 
     # Determine elements to be refined.
     to_refine = false(1, Nelems);
@@ -98,6 +97,13 @@ for i = 1 : 15
     refineable_elements = find(!any(msh.children));
     to_refine(refineable_elements) = (estimator > tol);
     
+    # Save results from current iteration.
+    n_dofs(i) = sum(!any(msh.hanging));
+    n_elems(i) = numel(refineable_elements);
+    n_to_refine(i) = sum(to_refine);
+    err(i) = norm(estimator, 2);
+    capacitance(i) = C;
+    
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
     # Do refinement.
@@ -107,3 +113,6 @@ for i = 1 : 15
         msh = msh2m_quadtree_refine(msh, find(to_refine));
     endif
 endfor
+
+save("-text", [filename "_results.txt"], ...
+     "n_dofs", "n_elems", "n_to_refine", "err", "capacitance");
