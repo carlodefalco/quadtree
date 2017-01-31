@@ -32,7 +32,7 @@ y = union(linspace(y_sc, 0, 10), linspace(0, y_ins, 10));
 
 msh = msh2m_quadtree(x, y);
 
-threshold = 1e-3;
+tol_max = 1e-3;
 Nelems_max = 10000;
 
 for i = 1 : 15
@@ -98,7 +98,7 @@ for i = 1 : 15
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
     # Do refinement.
-    if (Nelems >= Nelems_max || (tol <= threshold / Nelems))
+    if (Nelems >= Nelems_max || (tol <= tol_max / Nelems))
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));

@@ -1,4 +1,4 @@
-function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
+function [to_refine] = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     nodes = msh.t(1:4, iel);
 
     x_iel = [min(msh.p(1, nodes)), max(msh.p(1, nodes))];
@@ -29,7 +29,7 @@ function to_refine = msh2m_to_refine(msh, A_fun, rhs_fun, u, iel, tol)
     # Added vertices (side midpoints).
     hanging_sides = [1, 3, 4, 2;
                      3, 4, 2, 1];
-    u_dnodes((numel(nodes)+1) : end - 1) = mean(u_dnodes(hanging_sides));
+    u_dnodes((numel(nodes)+1) : end-1) = mean(u_dnodes(hanging_sides));
     
     # Compute solution and evaluate error.
     u_iel = bim2a_quadtree_solve(msh_iel, A_iel, rhs_iel, u_dnodes, dnodes_iel);

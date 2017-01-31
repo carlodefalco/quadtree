@@ -24,7 +24,7 @@ function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
     # Added vertices (side midpoints).
     hanging_sides = [1, 3, 4, 2;
                      3, 4, 2, 1];
-    phi_dnodes((numel(nodes)+1) : end - 1) = mean(phi_dnodes(hanging_sides));
+    phi_dnodes((numel(nodes)+1) : end-1) = mean(phi_dnodes(hanging_sides));
     
     # Compute solution and evaluate error.
     phi_iel = nlpoisson(msh_iel, phi_dnodes, A_iel, M_iel, dnodes_iel, charge_n);

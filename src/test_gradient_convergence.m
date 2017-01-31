@@ -83,11 +83,11 @@ for i = 1 : numel(n)
     # Compute errors and estimator.
     err = (du_x_edge - du_x_ex).^2 + (du_y_edge - du_y_ex).^2;
     err_edge = sqrt(sum(err .* msh.wjacdet, 1));
-    err_edge_norm(i) = sqrt(sum(err_edge.^2));
+    err_edge_norm(i) = norm(err_edge, 2);
     
     err = (du_x_node - du_x_ex).^2 + (du_y_node - du_y_ex).^2;
     err_node = sqrt(sum(err .* msh.wjacdet, 1));
-    err_node_norm(i) = sqrt(sum(err_node.^2));
+    err_node_norm(i) = norm(err_node, 2);
     
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
     
