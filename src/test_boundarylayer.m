@@ -55,14 +55,6 @@ for i = 1:10
     
     u = bim2a_quadtree_solve(msh, A(msh), rhs(msh), u, dnodes);
 
-    # Save solution to file.
-    fclose all;
-    filename = sprintf("sol_%d", i);
-    if (exist([filename ".vtu"], "file"))
-        delete([filename ".vtu"]);
-    endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"}, {}, 1);
-
     # Determine elements to be refined.
     to_refine = false(1, Nelems);
     
@@ -71,12 +63,19 @@ for i = 1:10
     
     refineable_elements = find(!any(msh.children));
     to_refine(refineable_elements) = (estimator > tol);
+
+    # Save solution to file.
+    fclose all;
+    filename = sprintf("./soluzione_boundary_layer_1e-2_ZZ_du/sol_%d", i);
+    if (exist([filename ".vtu"], "file"))
+        delete([filename ".vtu"]);
+    endif
+    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"}, {estimator.', "estimator"}, 1);
     
-    # Save results from current iteration.
     n_dofs(i) = sum(!any(msh.hanging));
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
-    err(i) = norm(estimator, 2);
+    global_estimator(i) = norm(estimator, 2);
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
@@ -88,4 +87,4 @@ for i = 1:10
 endfor
 
 save("-text", [filename "_results.txt"], ...
-     "n_dofs", "n_elems", "n_to_refine", "err");
+     "n_dofs", "n_elems", "n_to_refine", "global_estimator");

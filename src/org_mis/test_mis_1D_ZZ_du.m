@@ -76,14 +76,6 @@ for i = 1 : 15
     
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
-    
-    # Save solution to file.
-    fclose all;
-    filename = sprintf("./sol_MIS_1D_ZZ_du/sol_%d", i);
-    if (exist([filename ".vtu"], "file"))
-        delete([filename ".vtu"]);
-    endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, {}, 1);
 
     # Determine elements to be refined.
     to_refine = false(1, Nelems);
@@ -94,11 +86,19 @@ for i = 1 : 15
     refineable_elements = find(!any(msh.children));
     to_refine(refineable_elements) = (estimator > tol);
     
-    # Save results from current iteration.
+    # Save solution to file.
+    fclose all;
+    filename = sprintf("./sol_MIS_1D_ZZ_du/sol_%d", i);
+    if (exist([filename ".vtu"], "file"))
+        delete([filename ".vtu"]);
+    endif
+    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, ...
+                                                {estimator.', "estimator"}, 1);
+    
     n_dofs(i) = sum(!any(msh.hanging));
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
-    err(i) = norm(estimator, 2);
+    global_estimator(i) = norm(estimator, 2);
     capacitance(i) = C;
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
@@ -112,4 +112,4 @@ for i = 1 : 15
 endfor
 
 save("-text", [filename "_results.txt"], ...
-     "n_dofs", "n_elems", "n_to_refine", "err", "capacitance");
+     "n_dofs", "n_elems", "n_to_refine", "global_estimator", "capacitance");
