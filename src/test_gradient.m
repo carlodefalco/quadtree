@@ -12,7 +12,7 @@ region = 1;
 sides = 1:4;
 
 msh = msh2m_quadtree(x, y, region, sides);
-msh = msh2m_quadtree_refine(msh, [22 23 31 32]);
+#msh = msh2m_quadtree_refine(msh, [22 23 31 32]);
 
 x = msh.p(1, :).';
 y = msh.p(2, :).';
