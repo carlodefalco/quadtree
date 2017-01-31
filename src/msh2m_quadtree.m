@@ -45,6 +45,29 @@ function msh = msh2m_quadtree (x, y, region = 1, sides = [1:4]);
   msh.sides = sides.';
   msh.orien = allorien(ii);
   
+  # Sort sides to be oriented along positive x and y directions.
+  sides_x = find(msh.orien);
+  
+  sides_x_nodes = msh.sides(:, sides_x);
+  [~, idx] = sort(reshape(msh.p(1, sides_x_nodes), ...
+                          size(sides_x_nodes)));
+  
+  idx1 = sub2ind(size(msh.sides), idx(1, :), sides_x);
+  idx2 = sub2ind(size(msh.sides), idx(2, :), sides_x);
+  [msh.sides(1, sides_x), msh.sides(2, sides_x)] = ...
+      deal(msh.sides(idx1), msh.sides(idx2));
+  
+  sides_y = find(!msh.orien);
+  sides_y_nodes = msh.sides(:, sides_y);
+  [~, idx] = sort(reshape(msh.p(2, sides_y_nodes), ...
+                          size(sides_y_nodes)));
+  
+  idx1 = sub2ind(size(msh.sides), idx(1, :), sides_y);
+  idx2 = sub2ind(size(msh.sides), idx(2, :), sides_y);
+  [msh.sides(1, sides_y), msh.sides(2, sides_y)] = ...
+      deal(msh.sides(idx1), msh.sides(idx2));
+  
+  # Build sides connectivity.
   msh.ts = reshape(jj, [], 4).';
   
   msh.level    = ones  (1, columns (msh.t));

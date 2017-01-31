@@ -21,8 +21,8 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
         sides_x_nodes = msh.sides(:, sides_x);
         sides_y_nodes = msh.sides(:, sides_y);
         
-        hx = abs(diff(reshape(msh.p(1, sides_x_nodes), size(sides_x_nodes)))).';
-        hy = abs(diff(reshape(msh.p(2, sides_y_nodes), size(sides_y_nodes)))).';
+        hx = diff(reshape(msh.p(1, sides_x_nodes), size(sides_x_nodes))).';
+        hy = diff(reshape(msh.p(2, sides_y_nodes), size(sides_y_nodes))).';
         
         ## Compute the reconstructed gradient along x.
         if (numel(sides_x) == 1)
@@ -40,8 +40,8 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
             
             # Compute hx.
             neighbors_nodes = msh.sides(:, neighbors);
-            hx_neighbor = abs(diff(reshape(msh.p(1, neighbors_nodes), ...
-                                           size(neighbors_nodes)))).';
+            hx_neighbor = diff(reshape(msh.p(1, neighbors_nodes), ...
+                                       size(neighbors_nodes))).';
             
             # Add neighbor to sides_x list and compute weights.
             sides_x = [sides_x; neighbors];
@@ -66,8 +66,8 @@ function [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du)
             
             # Compute hy.
             neighbor_nodes = msh.sides(:, neighbors);
-            hy_neighbor = abs(diff(reshape(msh.p(2, neighbor_nodes), ...
-                                           size(neighbor_nodes)))).';
+            hy_neighbor = diff(reshape(msh.p(2, neighbor_nodes), ...
+                                       size(neighbor_nodes))).';
             
             # Add neighbor to sides_y list and compute weights.
             sides_y = [sides_y; neighbors];
