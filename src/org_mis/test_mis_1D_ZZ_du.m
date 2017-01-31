@@ -88,7 +88,8 @@ for i = 1 : 15
     
     # Save solution to file.
     fclose all;
-    filename = sprintf("./sol_MIS_1D_ZZ_du/sol_%d", i);
+    basename = "./sol_MIS_1D_ZZ_du/sol";
+    filename = sprintf([basename "_%d"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
@@ -101,15 +102,15 @@ for i = 1 : 15
     global_estimator(i) = norm(estimator, 2);
     capacitance(i) = C;
     
+    save("-text", [basename "_results.txt"], ...
+         "n_dofs", "n_elems", "n_to_refine", "global_estimator", "capacitance");
+    
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
     # Do refinement.
-    if (Nelems >= Nelems_max || (tol <= tol_max / Nelems))
+    if (n_elems(i) >= Nelems_max || (tol <= tol_max / n_elems(i)))
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));
     endif
 endfor
-
-save("-text", [filename "_results.txt"], ...
-     "n_dofs", "n_elems", "n_to_refine", "global_estimator", "capacitance");

@@ -66,7 +66,8 @@ for i = 1:10
 
     # Save solution to file.
     fclose all;
-    filename = sprintf("./soluzione_boundary_layer_1e-2_ZZ_du/sol_%d", i);
+    basename = "./soluzione_boundary_layer_1e-2_ZZ_du/sol";
+    filename = sprintf([basename "_%d"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
@@ -76,15 +77,15 @@ for i = 1:10
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
     global_estimator(i) = norm(estimator, 2);
+
+    save("-text", [basename "_results.txt"], ...
+         "n_dofs", "n_elems", "n_to_refine", "global_estimator");
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
-    if (Nelems >= Nelems_max || (tol <= tol_max / Nelems))
+    if (n_elems(i) >= Nelems_max || (tol <= tol_max / n_elems(i)))
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));
     endif
 endfor
-
-save("-text", [filename "_results.txt"], ...
-     "n_dofs", "n_elems", "n_to_refine", "global_estimator");
