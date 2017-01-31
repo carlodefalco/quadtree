@@ -25,10 +25,6 @@ du_y_ex = (x - 1/2);
 du = bim2c_quadtree_pde_edge_gradient(msh, u_ex);
 [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du);
 
-boundary = msh2m_nodes_on_sides(msh, 1:4);
-du_x(boundary) = du_x_ex(boundary);
-du_y(boundary) = du_y_ex(boundary);
-
 ## Compute error estimator.
 [msh, edge_space, node_space] = ...
          bim2c_quadtree_mesh_properties(msh);

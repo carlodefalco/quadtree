@@ -43,11 +43,6 @@ for i = 1 : numel(n)
     # Compute numerical gradient on edge and node space.
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
-    
-    # Fix boundary values.
-    boundary = msh2m_nodes_on_sides(msh, 1:4);
-    du_x(boundary) = du_x_ex(boundary);
-    du_y(boundary) = du_y_ex(boundary);
 
     # Evaluate exact gradient on quadrature nodes.
     Nconn = size(node_space.connectivity);
