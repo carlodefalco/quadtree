@@ -35,6 +35,7 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
     omesh.e = [omesh.e imesh.e(:, imesh.e(7, :) == sdl(isd))];
     omesh.e = [omesh.e imesh.e(:, imesh.e(6, :) == sdl(isd))];
   endfor
+
   omesh.e = unique(omesh.e', "rows")';
 
   ## Use new node numbering in boundary segment list.
@@ -47,20 +48,36 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   omesh.children = imesh.children(:, elementlist);
   
   ## Use new node numbering in children list.
-  where = (omesh.children != 0);
-  omesh.children(where) = indx(omesh.children(where));
+  indx_elem(elementlist) = 1 : length(elementlist);
+  
+  where = all(omesh.children != 0);
+  omesh.children(:, where) = indx_elem(omesh.children(:, where));
   
   omesh.hanging    = imesh.hanging   (:, nodelist);
   omesh.onboundary = imesh.onboundary(:, nodelist);
   
-  omesh.reduced_to_full = imesh.reduced_to_full(:, nodelist);
-  omesh.full_to_reduced = imesh.full_to_reduced(:, nodelist);
+  omesh.reduced_to_full = find(!any(omesh.hanging));
+  tmp = 1 : columns(omesh.reduced_to_full);
+
+  omesh.full_to_reduced = zeros (1, columns(omesh.p));
+  omesh.full_to_reduced(1, omesh.reduced_to_full) = tmp;
   
-  ## Use new node numbering in reduced_to_full and full_to_reduced.
-  omesh.reduced_to_full = indx(omesh.reduced_to_full);
+  ## Rebuild side structures.
+  omesh.ts = imesh.ts(:, elementlist);
   
-  where = (omesh.full_to_reduced != 0);
-  omesh.full_to_reduced(where) = indx(omesh.full_to_reduced(where));
+  sideslist = setdiff(unique(omesh.ts), 0);
+  indx_sides(sideslist) = 1 : length(sideslist);
+  
+  where = all(omesh.ts != 0);
+  omesh.ts(:, where) = indx_sides(omesh.ts(:, where));
+  
+  omesh.sides = indx(imesh.sides(:, sideslist));
+  omesh.orien = imesh.orien(sideslist);
+  
+  omesh.hanging_sides = imesh.hanging_sides(sideslist);
+  
+  where = (omesh.hanging_sides != 0);
+  omesh.hanging_sides(where) = indx_sides(omesh.hanging_sides(where));
 endfunction
 
 %!demo

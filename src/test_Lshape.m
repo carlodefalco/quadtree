@@ -50,7 +50,7 @@ newedges = [e1;
             zeros(2, ne);
             newside * ones(1, ne);
             region(ones(1, ne));
-            region(ones(1, ne))];
+            region(ones(1, ne)) + 1];
 
 msh.e = [msh.e newedges];
 
