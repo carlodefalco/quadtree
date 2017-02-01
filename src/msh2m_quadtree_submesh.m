@@ -1,4 +1,4 @@
-function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
+function [omesh, nodelist, elementlist, sidelist] = msh2m_quadtree_submesh(imesh, sdl)
   ## Check input.
   if (nargin != 2)
     error("msh2m_submesh: wrong number of input parameters.");
@@ -65,16 +65,16 @@ function [omesh, nodelist, elementlist] = msh2m_quadtree_submesh(imesh, sdl)
   ## Rebuild side structures.
   omesh.ts = imesh.ts(:, elementlist);
   
-  sideslist = setdiff(unique(omesh.ts), 0);
-  indx_sides(sideslist) = 1 : length(sideslist);
+  sidelist = setdiff(unique(omesh.ts), 0);
+  indx_sides(sidelist) = 1 : length(sidelist);
   
   where = all(omesh.ts != 0);
   omesh.ts(:, where) = indx_sides(omesh.ts(:, where));
   
-  omesh.sides = indx(imesh.sides(:, sideslist));
-  omesh.orien = imesh.orien(sideslist);
+  omesh.sides = indx(imesh.sides(:, sidelist));
+  omesh.orien = imesh.orien(sidelist);
   
-  omesh.hanging_sides = imesh.hanging_sides(sideslist);
+  omesh.hanging_sides = imesh.hanging_sides(sidelist);
   
   where = (omesh.hanging_sides != 0);
   omesh.hanging_sides(where) = indx_sides(omesh.hanging_sides(where));
