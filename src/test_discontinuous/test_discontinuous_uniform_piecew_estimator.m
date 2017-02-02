@@ -39,8 +39,12 @@ for i = 1 : numel(n)
     u_ex = 1 + 2 * c * sinh(x / sqrt(data.eps1));
     u_ex(omega2) = -0.5 * (x(omega2) - 1) .* (x(omega2) + 2 * d);
     
-    du_x_ex = 2 * c * cosh(x / sqrt(data.eps1)) / sqrt(data.eps1);
-    du_x_ex(omega2) = -x(omega2) - d + 0.5;
+    du_x_ex1 = 2 * c * cosh(x / sqrt(data.eps1)) / sqrt(data.eps1);
+    du_x_ex2 = -x - d + 0.5;
+    
+    du_x_ex = zeros(size(u_ex));
+    du_x_ex(omega1) = du_x_ex1(omega1);
+    du_x_ex(omega2) = du_x_ex2(omega2);
     
     du_y_ex = zeros(size(du_x_ex));
     
@@ -78,14 +82,14 @@ for i = 1 : numel(n)
     err_node = bim2c_quadtree_pde_error_semiH1_node(msh, du_x, du_y, du_x_ex, du_y_ex);
     err_node_norm(i) = norm(err_node, 2);
     
-    err_edge1 = bim2c_quadtree_pde_error_semiH1_edge(msh1, du_edge1, du_x_ex(omega1), du_y_ex(omega1));
+    err_edge1 = bim2c_quadtree_pde_error_semiH1_edge(msh1, du_edge1, du_x_ex1(omega1), du_y_ex(omega1));
     err_edge_norm1(i) = norm(err_edge1, 2);
-    err_node1 = bim2c_quadtree_pde_error_semiH1_node(msh1, du_x1, du_y1, du_x_ex(omega1), du_y_ex(omega1));
+    err_node1 = bim2c_quadtree_pde_error_semiH1_node(msh1, du_x1, du_y1, du_x_ex1(omega1), du_y_ex(omega1));
     err_node_norm1(i) = norm(err_node1, 2);
     
-    err_edge2 = bim2c_quadtree_pde_error_semiH1_edge(msh2, du_edge2, du_x_ex(omega2), du_y_ex(omega2));
+    err_edge2 = bim2c_quadtree_pde_error_semiH1_edge(msh2, du_edge2, du_x_ex2(omega2), du_y_ex(omega2));
     err_edge_norm2(i) = norm(err_edge2, 2);
-    err_node2 = bim2c_quadtree_pde_error_semiH1_node(msh2, du_x2, du_y2, du_x_ex(omega2), du_y_ex(omega2));
+    err_node2 = bim2c_quadtree_pde_error_semiH1_node(msh2, du_x2, du_y2, du_x_ex2(omega2), du_y_ex(omega2));
     err_node_norm2(i) = norm(err_node2, 2);
     
     # Determine elements to be refined.
@@ -118,7 +122,7 @@ for i = 1 : numel(n)
     endif
     fpl_vtk_write_field_quadmesh(filename1, msh1,
                                  {u(omega1), "u"; u_ex(omega1), "u_ex";
-                                  du_x_ex(omega1), "du_x_ex"; du_y_ex(omega1), "du_y_ex";
+                                  du_x_ex1(omega1), "du_x_ex"; du_y_ex(omega1), "du_y_ex";
                                   du_x1, "du_x_node"; du_y1, "du_y_node"},
                                  {err_edge1(:), "err_edge"; err_node1(:), "err_node"; estimator(omega1_el)(:), "estimator"}, 1);
     
@@ -128,7 +132,7 @@ for i = 1 : numel(n)
     endif
     fpl_vtk_write_field_quadmesh(filename2, msh2,
                                  {u(omega2), "u"; u_ex(omega2), "u_ex";
-                                  du_x_ex(omega2), "du_x_ex"; du_y_ex(omega2), "du_y_ex";
+                                  du_x_ex2(omega2), "du_x_ex"; du_y_ex(omega2), "du_y_ex";
                                   du_x2, "du_x_node"; du_y2, "du_y_node"},
                                  {err_edge2(:), "err_edge"; err_node2(:), "err_node"; estimator(omega2_el)(:), "estimator"}, 1);
     
