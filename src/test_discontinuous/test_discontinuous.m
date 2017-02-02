@@ -57,57 +57,13 @@ for i = 1 : 10
     
     refineable_elements = find(!any(msh.children));
     
-    [msh, edge_space, node_space] = bim2c_quadtree_mesh_properties(msh, [], []);
-    edge_space.shp = edge_space.shp(:, :, :, refineable_elements);
-    edge_space.connectivity = edge_space.connectivity(:, refineable_elements);
-    
-    node_space.shp = node_space.shp(:, :, refineable_elements);
-    node_space.connectivity = node_space.connectivity(:, refineable_elements);
-    
-    # Compute numerical gradient on edge and node space.
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
-
-    Nquad = size(edge_space.shp, 2); # No. of quadrature nodes.
     
-    # Evaluate exact gradient on quadrature nodes.
-    Nconn = size(node_space.connectivity);
-    
-    du_x_ex = reshape(du_x_ex(node_space.connectivity), [1, Nconn]);
-    du_x_ex = repmat(du_x_ex, [Nquad, 1, 1]);
-    
-    du_y_ex = reshape(du_y_ex(node_space.connectivity), [1, Nconn]);
-    du_y_ex = repmat(du_y_ex, [Nquad, 1, 1]);
-    
-    du_x_ex = squeeze(sum(node_space.shp .* du_x_ex, 2));
-    du_y_ex = squeeze(sum(node_space.shp .* du_y_ex, 2));
-    
-    # Evaluate edge gradient on quadrature nodes.
-    Nconn = size(edge_space.connectivity);
-    du_edge = reshape(du_edge(edge_space.connectivity), [1, Nconn]);
-    du_edge = repmat(du_edge, [Nquad, 1, 1]);
-    
-    du_x_edge = squeeze(sum(squeeze(edge_space.shp(1, :, :, :)) .* du_edge, 2));
-    du_y_edge = squeeze(sum(squeeze(edge_space.shp(2, :, :, :)) .* du_edge, 2));
-    
-    # Evaluate node gradient on quadrature nodes.
-    Nconn = size(node_space.connectivity);
-    du_x = reshape(du_x(node_space.connectivity), [1, Nconn]);
-    du_x = repmat(du_x, [Nquad, 1, 1]);
-    
-    du_y = reshape(du_y(node_space.connectivity), [1, Nconn]);
-    du_y = repmat(du_y, [Nquad, 1, 1]);
-    
-    du_x_node = squeeze(sum(node_space.shp .* du_x, 2));
-    du_y_node = squeeze(sum(node_space.shp .* du_y, 2));
-    
-    # Compute errors and estimator.
-    err = (du_x_edge - du_x_ex).^2 + (du_y_edge - du_y_ex).^2;
-    err_edge = sqrt(sum(err .* msh.wjacdet(:, refineable_elements), 1));
+    err_edge = bim2c_quadtree_pde_error_semiH1_edge(msh, du_edge, du_x_ex, du_y_ex);
     err_edge_norm(i) = norm(err_edge, 2);
     
-    err = (du_x_node - du_x_ex).^2 + (du_y_node - du_y_ex).^2;
-    err_node = sqrt(sum(err .* msh.wjacdet(:, refineable_elements), 1));
+    err_node = bim2c_quadtree_pde_error_semiH1_node(msh, du_x, du_y, du_x_ex, du_y_ex);
     err_node_norm(i) = norm(err_node, 2);
     
     # Determine elements to be refined.
@@ -132,7 +88,7 @@ for i = 1 : 10
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
     global_estimator(i) = norm(estimator, 2);
-    global_error(i) = norm(u - u_ex, inf);
+    global_error(i) = norm(bim2c_quadtree_pde_error_L2_node(msh, u, u_ex), 2);
     
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", ...

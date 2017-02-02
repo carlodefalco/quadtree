@@ -59,39 +59,49 @@ for i = 1 : numel(n)
     
     refineable_elements = find(!any(msh.children));
     
-    [msh, edge_space, node_space] = bim2c_quadtree_mesh_properties(msh, [], []);
-    edge_space.shp = edge_space.shp(:, :, :, refineable_elements);
-    edge_space.connectivity = edge_space.connectivity(:, refineable_elements);
-    
-    node_space.shp = node_space.shp(:, :, refineable_elements);
-    node_space.connectivity = node_space.connectivity(:, refineable_elements);
-    
-    # Compute numerical gradient on edge and node space.
-    du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
-    [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
-
-    err_edge = bim2c_quadtree_pde_error_semiH1_edge(msh, du_edge, du_x_ex, du_y_ex);
-    err_edge_norm(i) = norm(err_edge, 2);
-    
-    err_node = bim2c_quadtree_pde_error_semiH1_node(msh, du_x, du_y, du_x_ex, du_y_ex);
-    err_node_norm(i) = norm(err_node, 2);
-    
-    # Determine elements to be refined.
-    to_refine = false(1, Nelems);
-    
-    estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
-    tol = mean(estimator);
-    
-    to_refine(refineable_elements) = (estimator > tol);
-    
-    # Save solution to file.
     msh_new = mark_regions(msh);
     
     [msh1, omega1, omega1_el] = msh2m_quadtree_submesh(msh_new, 1);
     [msh2, omega2, omega2_el] = msh2m_quadtree_submesh(msh_new, 2);
     
+    du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
+    [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
+    
+    du_edge1 = bim2c_quadtree_pde_edge_gradient(msh1, u(omega1));
+    [du_x1, du_y1] = bim2c_quadtree_pde_reconstructed_gradient(msh1, du_edge1);
+    
+    du_edge2 = bim2c_quadtree_pde_edge_gradient(msh2, u(omega2));
+    [du_x2, du_y2] = bim2c_quadtree_pde_reconstructed_gradient(msh2, du_edge2);
+    
+    err_edge = bim2c_quadtree_pde_error_semiH1_edge(msh, du_edge, du_x_ex, du_y_ex);
+    err_edge_norm(i) = norm(err_edge, 2);
+    err_node = bim2c_quadtree_pde_error_semiH1_node(msh, du_x, du_y, du_x_ex, du_y_ex);
+    err_node_norm(i) = norm(err_node, 2);
+    
+    err_edge1 = bim2c_quadtree_pde_error_semiH1_edge(msh1, du_edge1, du_x_ex(omega1), du_y_ex(omega1));
+    err_edge_norm1(i) = norm(err_edge1, 2);
+    err_node1 = bim2c_quadtree_pde_error_semiH1_node(msh1, du_x1, du_y1, du_x_ex(omega1), du_y_ex(omega1));
+    err_node_norm1(i) = norm(err_node1, 2);
+    
+    err_edge2 = bim2c_quadtree_pde_error_semiH1_edge(msh2, du_edge2, du_x_ex(omega2), du_y_ex(omega2));
+    err_edge_norm2(i) = norm(err_edge2, 2);
+    err_node2 = bim2c_quadtree_pde_error_semiH1_node(msh2, du_x2, du_y2, du_x_ex(omega2), du_y_ex(omega2));
+    err_node_norm2(i) = norm(err_node2, 2);
+    
+    # Determine elements to be refined.
+    
+    to_refine = false(1, Nelems);
+    
+    estimator = zeros(1, Nelems);
+    estimator(omega1_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh1, u(omega1));
+    estimator(omega2_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh2, u(omega2));
+    tol = mean(estimator);
+    
+    to_refine(refineable_elements) = (estimator > tol);
+    
+    # Save solution to file.
     fclose all;
-    basename = "./sol_discontinuous_uniform/sol";
+    basename = "./sol_discontinuous_uniform_piecew_estimator/sol";
     filename = sprintf([basename "_%d_omega"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
@@ -109,8 +119,8 @@ for i = 1 : numel(n)
     fpl_vtk_write_field_quadmesh(filename1, msh1,
                                  {u(omega1), "u"; u_ex(omega1), "u_ex";
                                   du_x_ex(omega1), "du_x_ex"; du_y_ex(omega1), "du_y_ex";
-                                  du_x(omega1), "du_x_node"; du_y(omega1), "du_y_node"},
-                                 {err_edge(omega1_el)(:), "err_edge"; err_node(omega1_el)(:), "err_node"; estimator(omega1_el)(:), "estimator"}, 1);
+                                  du_x1, "du_x_node"; du_y1, "du_y_node"},
+                                 {err_edge1(:), "err_edge"; err_node1(:), "err_node"; estimator(omega1_el)(:), "estimator"}, 1);
     
     filename2 = sprintf([basename "_%d_omega2"], i);
     if (exist([filename2 ".vtu"], "file"))
@@ -119,8 +129,8 @@ for i = 1 : numel(n)
     fpl_vtk_write_field_quadmesh(filename2, msh2,
                                  {u(omega2), "u"; u_ex(omega2), "u_ex";
                                   du_x_ex(omega2), "du_x_ex"; du_y_ex(omega2), "du_y_ex";
-                                  du_x(omega2), "du_x_node"; du_y(omega2), "du_y_node"},
-                                 {err_edge(omega2_el)(:), "err_edge"; err_node(omega2_el)(:), "err_node"; estimator(omega2_el)(:), "estimator"}, 1);
+                                  du_x2, "du_x_node"; du_y2, "du_y_node"},
+                                 {err_edge2(:), "err_edge"; err_node2(:), "err_node"; estimator(omega2_el)(:), "estimator"}, 1);
     
     filename3 = sprintf([basename "_%d_edge"], i);
     if (exist([filename3 ".vtu"], "file"))
@@ -136,7 +146,8 @@ for i = 1 : numel(n)
     
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", ...
-         "err_edge_norm", "err_node_norm", ...
+         "err_node_norm1", "err_node_norm2", ...
+         "err_edge_norm1", "err_edge_norm2", ...
          "global_estimator", "global_error");
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
