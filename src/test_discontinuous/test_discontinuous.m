@@ -15,8 +15,6 @@ Nelems_max = 10000;
 for i = 1 : 10
     fprintf("i = %d\n", i);
     
-    msh = mark_regions(msh);
-    
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
     
@@ -33,14 +31,14 @@ for i = 1 : 10
     omega2_el = omega2_elems(msh);
     epsilon = diffusion_coefficient(msh, data, omega2_el);
     
-    c = -0.4375 * sqrt(data.eps1) / (0.5 * cosh(0.5 / sqrt(data.eps1)) + sqrt(data.eps1) * sinh(0.5 / sqrt(data.eps1)));
-    d = 0.875 * cosh(0.5 / sqrt(data.eps1)) / (0.5 * cosh(0.5 / sqrt(data.eps1)) + sqrt(data.eps1) * sinh(0.5 / sqrt(data.eps1)));
+    c = -0.4375 * data.eps2 / (0.5 * sqrt(data.eps1) * cosh(0.5 / sqrt(data.eps1)) + data.eps2 * sinh(0.5 / sqrt(data.eps1)));
+    d = 1.75 * sqrt(data.eps1) * cosh(0.5 / sqrt(data.eps1)) / (sqrt(data.eps1) * cosh(0.5 / sqrt(data.eps1)) + 2 * data.eps2 * sinh(0.5 / sqrt(data.eps1)));
     
     u_ex = 1 + 2 * c * sinh(x / sqrt(data.eps1));
-    u_ex(omega2) = -0.5 * (-1 + x(omega2)) .* (2 * d + x(omega2));
+    u_ex(omega2) = -0.5 * (x(omega2) - 1) .* (x(omega2) + 2 * d);
     
     du_x_ex = 2 * c * cosh(x / sqrt(data.eps1)) / sqrt(data.eps1);
-    du_x_ex(omega2) = 0.5 * (1 - 2 * x(omega2) - 2 * d);
+    du_x_ex(omega2) = x(omega2) - d - 0.5;
     
     du_y_ex = zeros(size(du_x_ex));
     
