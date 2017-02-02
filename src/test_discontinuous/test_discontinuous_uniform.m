@@ -4,16 +4,18 @@ clc;
 
 addpath(canonicalize_file_name("../"));
 
-x = linspace(0, 1, 11);
-y = linspace(0, 1, 11);
-
-msh = msh2m_quadtree(x, y);
-
 tol_max = 1e-3;
 Nelems_max = 10000;
 
-for i = 1 : 10
+n = 10 * 2.^(0:5) + 1;
+
+for i = 1 : numel(n)
     fprintf("i = %d\n", i);
+    
+    x = linspace(0, 1, n(i));
+    y = linspace(0, 1, n(i));
+
+    msh = msh2m_quadtree(x, y);
     
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
@@ -120,7 +122,7 @@ for i = 1 : 10
     
     # Save solution to file.
     fclose all;
-    basename = "./sol_discontinuous/sol";
+    basename = "./sol_discontinuous_uniform/sol";
     filename = sprintf([basename "_%d"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
@@ -140,11 +142,4 @@ for i = 1 : 10
          "global_estimator", "global_error");
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
-    
-    # Do refinement.
-    if (n_elems(i) >= Nelems_max || (tol <= tol_max / n_elems(i)))
-        break;
-    else
-        msh = msh2m_quadtree_refine(msh, find(to_refine));
-    endif
 endfor

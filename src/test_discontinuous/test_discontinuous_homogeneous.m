@@ -2,11 +2,10 @@ clear all;
 close all;
 clc;
 
-n = 6;
+addpath(canonicalize_file_name("../"));
 
-# Mesh definition.
-x = linspace(0, 1, n);
-y = linspace(0, 1, n);
+x = linspace(0, 1, 11);
+y = linspace(0, 1, 11);
 
 msh = msh2m_quadtree(x, y);
 
@@ -18,29 +17,42 @@ for i = 1 : 10
     
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
-
+    
     x = msh.p(1, :).';
     y = msh.p(2, :).';
     
-    # Define parameters and exact solution.
-    lambda = 1;
+    # Define parameters.
+    data.eps1 = 0.5;
+    data.eps2 = 1;
     
-    u_ex = (exp(lambda * x) - 1) / (exp(lambda) - 1) .* (exp(lambda * y) - 1) / (exp(lambda) - 1);
-    du_x_ex = (lambda * exp(lambda * x) - 1) / (exp(lambda) - 1) .* (exp(lambda * y) - 1) / (exp(lambda) - 1);
-    du_y_ex = (exp(lambda * x) - 1) / (exp(lambda) - 1) .* (lambda * exp(lambda * y) - 1) / (exp(lambda) - 1);
+    omega1 = omega1_nodes(msh);
+    omega2 = setdiff(1:Nnodes, omega1);
+    
+    omega2_el = omega2_elems(msh);
+    epsilon = diffusion_coefficient(msh, data, omega2_el);
+    
+    c = -0.5 * data.eps2 / (0.5 * sqrt(data.eps1) * cosh(0.5 / sqrt(data.eps1)) + data.eps2 * sinh(0.5 / sqrt(data.eps1)));
+    d = 2 * sqrt(data.eps1) * cosh(0.5 / sqrt(data.eps1)) / (sqrt(data.eps1) * cosh(0.5 / sqrt(data.eps1)) + 2 * data.eps2 * sinh(0.5 / sqrt(data.eps1)));
+
+    u_ex = 1 + 2 * c * sinh(x / sqrt(data.eps1));
+    u_ex(omega2) = -d * (x(omega2) - 1);
+    
+    du_x_ex = 2 * c * cosh(x / sqrt(data.eps1)) / sqrt(data.eps1);
+    du_x_ex(omega2) = -d;
+    
+    du_y_ex = zeros(size(du_x_ex));
     
     # Assemble system.
-    alpha = @(msh) ones(columns(msh.t), 1);
-    psi = @(msh) lambda * (msh.p(1, :) + msh.p(2, :));
+    A = bim2a_quadtree_laplacian(msh, epsilon) + ...
+        bim2a_quadtree_reaction(msh, !omega2_el, ones(Nnodes, 1));
     
-    A = bim2a_quadtree_advection_diffusion(msh, alpha(msh), psi(msh));
-
-    dnodes = msh2m_nodes_on_sides(msh, 1:4);
-
-    f = @(msh) zeros(columns(msh.t), 1);
-    g = @(msh) zeros(columns(msh.p), 1);
-    rhs = bim2a_quadtree_rhs(msh, f(msh), g(msh));
-
+    f = ones(Nelems, 1);
+    f(omega2_el) = 0;
+    g = ones(Nnodes, 1);
+    rhs = bim2a_quadtree_rhs (msh, f, g);
+    
+    # Compute solution and error.
+    dnodes = msh2m_nodes_on_sides(msh, [2 4]);
     u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
     
     refineable_elements = find(!any(msh.children));
@@ -108,7 +120,7 @@ for i = 1 : 10
     
     # Save solution to file.
     fclose all;
-    basename = "./sol_gradient_convergence_advection/sol";
+    basename = "./sol_discontinuous_homogeneous/sol";
     filename = sprintf([basename "_%d"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);

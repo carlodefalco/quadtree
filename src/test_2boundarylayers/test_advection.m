@@ -2,22 +2,22 @@ clear all;
 close all;
 clc;
 
-n = 6 * 2.^(0:5);
+addpath(canonicalize_file_name("../"));
+
+n = 6;
+
+# Mesh definition.
+x = linspace(0, 1, n);
+y = linspace(0, 1, n);
+
+msh = msh2m_quadtree(x, y);
 
 tol_max = 1e-3;
 Nelems_max = 10000;
 
-for i = 1 : 6
+for i = 1 : 10
     fprintf("i = %d\n", i);
     
-    if (i == 1)
-        # Mesh definition.
-        x = linspace(0, 1, n(i));
-        y = linspace(0, 1, n(i));
-
-        msh = msh2m_quadtree(x, y);
-    endif
-
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
 
@@ -25,23 +25,22 @@ for i = 1 : 6
     y = msh.p(2, :).';
     
     # Define parameters and exact solution.
-    epsilon = 1e-2;
+    lambda = 1;
     
-    u_ex = (1 - sinh(x / sqrt(epsilon)) / sinh(1 / sqrt(epsilon))) .* (1 - sinh(y / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)));
-    du_x_ex = (cosh(x / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)) .* (-1 + sinh(y / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)))) / sqrt(epsilon);
-    du_y_ex = (cosh(y / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)) .* (-1 + sinh(x / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)))) / sqrt(epsilon);
+    u_ex = (exp(lambda * x) - 1) / (exp(lambda) - 1) .* (exp(lambda * y) - 1) / (exp(lambda) - 1);
+    du_x_ex = (lambda * exp(lambda * x) - 1) / (exp(lambda) - 1) .* (exp(lambda * y) - 1) / (exp(lambda) - 1);
+    du_y_ex = (exp(lambda * x) - 1) / (exp(lambda) - 1) .* (lambda * exp(lambda * y) - 1) / (exp(lambda) - 1);
     
     # Assemble system.
-    alpha = @(msh) epsilon * ones(columns(msh.t), 1);
-    delta = @(msh) ones(columns(msh.t), 1);
-    zeta  = @(msh) ones(columns(msh.p), 1);
+    alpha = @(msh) ones(columns(msh.t), 1);
+    psi = @(msh) lambda * (msh.p(1, :) + msh.p(2, :));
     
-    A = bim2a_quadtree_laplacian(msh, alpha(msh)) + bim2a_quadtree_reaction(msh, delta(msh), zeta(msh));
+    A = bim2a_quadtree_advection_diffusion(msh, alpha(msh), psi(msh));
 
     dnodes = msh2m_nodes_on_sides(msh, 1:4);
 
-    f = @(msh) ones(columns(msh.t), 1);
-    g = @(msh) 1 - sinh(msh.p(1, :).' / sqrt(epsilon)) .* sinh(msh.p(2, :).' / sqrt(epsilon)) / sinh(1 / sqrt(epsilon))^2;
+    f = @(msh) zeros(columns(msh.t), 1);
+    g = @(msh) zeros(columns(msh.p), 1);
     rhs = bim2a_quadtree_rhs(msh, f(msh), g(msh));
 
     u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
@@ -111,7 +110,7 @@ for i = 1 : 6
     
     # Save solution to file.
     fclose all;
-    basename = "./sol_gradient_convergence_reaction/sol";
+    basename = "./sol_advection/sol";
     filename = sprintf([basename "_%d"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
