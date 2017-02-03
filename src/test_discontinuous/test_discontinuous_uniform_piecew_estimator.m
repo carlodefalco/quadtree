@@ -7,10 +7,10 @@ addpath(canonicalize_file_name("../"));
 tol_max = 1e-3;
 Nelems_max = 10000;
 
-n = 10 * 2.^(0:4) + 1;
-
-for i = 1 : numel(n)
+for i = 1 : 10
     fprintf("i = %d\n", i);
+    
+    n(i) = 10 * 2^(i-1) + 1;
     
     x = linspace(0, 1, n(i));
     y = linspace(0, 1, n(i));
@@ -68,6 +68,10 @@ for i = 1 : numel(n)
     [msh1, omega1, omega1_el] = msh2m_quadtree_submesh(msh_new, 1);
     [msh2, omega2, omega2_el] = msh2m_quadtree_submesh(msh_new, 2);
     
+    err_L2 = bim2c_quadtree_pde_error_L2_node(msh, u, u_ex);
+    err_L2_1 = bim2c_quadtree_pde_error_L2_node(msh1, u(omega1), u_ex(omega1));
+    err_L2_2 = bim2c_quadtree_pde_error_L2_node(msh2, u(omega2), u_ex(omega1));
+    
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
     
@@ -93,7 +97,6 @@ for i = 1 : numel(n)
     err_node_norm2(i) = norm(err_node2, 2);
     
     # Determine elements to be refined.
-    
     to_refine = false(1, Nelems);
     
     estimator = zeros(1, Nelems);
@@ -142,11 +145,13 @@ for i = 1 : numel(n)
     endif
     fpl_vtk_write_field_quadmesh_nedelec(filename3, msh, {du_edge, "du_edge"}, 1);
     
+    save("-binary", sprintf([basename "_%d_data.mat"], i), "*");
+    
     n_dofs(i) = sum(!any(msh.hanging));
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
     global_estimator(i) = norm(estimator, 2);
-    global_error(i) = norm(bim2c_quadtree_pde_error_L2_node(msh, u, u_ex), 2);
+    global_error(i) = norm(err_L2, 2);
     
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", ...

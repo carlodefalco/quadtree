@@ -7,10 +7,10 @@ addpath(canonicalize_file_name("../"));
 tol_max = 1e-3;
 Nelems_max = 10000;
 
-n = 10 * 2.^(0:4) + 1;
-
-for i = 1 : numel(n)
+for i = 1 : 10
     fprintf("i = %d\n", i);
+    
+    n(i) = 10 * 2^(i-1) + 1;
     
     x = linspace(0, 1, n(i));
     y = linspace(0, 1, n(i));
@@ -61,16 +61,10 @@ for i = 1 : numel(n)
     dnodes = msh2m_nodes_on_sides(msh, [2 4]);
     u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
     
+    err_L2 = bim2c_quadtree_pde_error_L2_node(msh, u, u_ex);
+    
     refineable_elements = find(!any(msh.children));
     
-    [msh, edge_space, node_space] = bim2c_quadtree_mesh_properties(msh, [], []);
-    edge_space.shp = edge_space.shp(:, :, :, refineable_elements);
-    edge_space.connectivity = edge_space.connectivity(:, refineable_elements);
-    
-    node_space.shp = node_space.shp(:, :, refineable_elements);
-    node_space.connectivity = node_space.connectivity(:, refineable_elements);
-    
-    # Compute numerical gradient on edge and node space.
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
 
@@ -132,11 +126,13 @@ for i = 1 : numel(n)
     endif
     fpl_vtk_write_field_quadmesh_nedelec(filename3, msh, {du_edge, "du_edge"}, 1);
     
+    save("-binary", sprintf([basename "_%d_data.mat"], i), "*");
+    
     n_dofs(i) = sum(!any(msh.hanging));
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
     global_estimator(i) = norm(estimator, 2);
-    global_error(i) = norm(bim2c_quadtree_pde_error_L2_node(msh, u, u_ex), 2);
+    global_error(i) = norm(err_L2, 2);
     
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", ...

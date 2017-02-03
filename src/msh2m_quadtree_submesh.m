@@ -53,7 +53,10 @@ function [omesh, nodelist, elementlist, sidelist] = msh2m_quadtree_submesh(imesh
   where = all(omesh.children != 0);
   omesh.children(:, where) = indx_elem(omesh.children(:, where));
   
-  omesh.hanging    = imesh.hanging   (:, nodelist);
+  omesh.hanging = imesh.hanging(:, nodelist);
+  where = all(omesh.hanging != 0);
+  omesh.hanging(:, where) = indx(omesh.hanging(:, where));
+  
   omesh.onboundary = imesh.onboundary(:, nodelist);
   
   omesh.reduced_to_full = find(!any(omesh.hanging));

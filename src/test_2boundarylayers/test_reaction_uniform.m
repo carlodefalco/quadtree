@@ -119,6 +119,8 @@ for i = 1 : numel(n)
     fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"},
                                  {err_edge.', "err_edge"; err_node.', "err_node"; estimator.', "estimator"}, 1);
     
+    save("-binary", sprintf([basename "_%d_data.mat"], i), "*");
+    
     n_dofs(i) = sum(!any(msh.hanging));
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
