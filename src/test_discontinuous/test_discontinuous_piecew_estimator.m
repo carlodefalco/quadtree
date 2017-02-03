@@ -4,8 +4,8 @@ clc;
 
 addpath(canonicalize_file_name("../"));
 
-x = linspace(0, 1, 7);
-y = linspace(0, 1, 7);
+x = linspace(0, 1, 11);
+y = linspace(0, 1, 11);
 
 msh = msh2m_quadtree(x, y);
 
@@ -101,11 +101,12 @@ for i = 1 : 10
     estimator(omega1_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh1, u(omega1));
     estimator(omega2_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh2, u(omega2));
     
-    to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, 0.75, 3);
+    crit = 3;
+    to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, 0.75, crit);
     
     # Save solution to file.
     fclose all;
-    basename = "./sol_discontinuous_piecew_estimator/sol";
+    basename = sprintf("./sol_discontinuous_piecew_estimator_crit%d/sol", crit);
     filename = sprintf([basename "_%d_omega"], i);
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
