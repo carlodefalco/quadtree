@@ -23,9 +23,8 @@ function msh = msh2m_quadtree_refine(msh, refinelist)
     msh.sides = sides.';
     msh.orien = allorien(ii);
     
-    # Sort sides to be oriented along positive x and y directions.
+    # Sort horizontal sides to be oriented along positive x direction.
     sides_x = find(msh.orien);
-    
     sides_x_nodes = msh.sides(:, sides_x);
     [~, idx] = sort(reshape(msh.p(1, sides_x_nodes), ...
                             size(sides_x_nodes)));
@@ -35,6 +34,7 @@ function msh = msh2m_quadtree_refine(msh, refinelist)
     [msh.sides(1, sides_x), msh.sides(2, sides_x)] = ...
         deal(msh.sides(idx1), msh.sides(idx2));
     
+    # Sort vertical sides to be oriented along positive y direction.
     sides_y = find(!msh.orien);
     sides_y_nodes = msh.sides(:, sides_y);
     [~, idx] = sort(reshape(msh.p(2, sides_y_nodes), ...
