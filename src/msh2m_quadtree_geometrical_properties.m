@@ -104,6 +104,6 @@ function [out] = computearea(p, e, t, x, w, request)
     
     out = nodes;
   elseif (request == "area")
-    out = sum(wjacdet, 1)';
+    out = sum(wjacdet, 1);
   endif
 endfunction
