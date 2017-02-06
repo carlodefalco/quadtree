@@ -21,6 +21,8 @@ function [msh] = mark_regions(msh)
 
     # Mark internal edges.
     l1 = find(msh.p(1, :) == 0.5);
+    [~, idx] = sort(msh.p(1, l1));
+    l1 = l1(idx);
 
     e1 = l1(1:end-1);
     e2 = l1(2:end);
@@ -32,8 +34,8 @@ function [msh] = mark_regions(msh)
                 e2;
                 zeros(2, ne);
                 newside * ones(1, ne);
-                region(ones(1, ne));
-                region(ones(1, ne)) + 1];
+                region * ones(1, ne);
+                region * ones(1, ne) + 1];
     
     # Unmark nodes hanging from one side but not from the other.
     hanging_nodes = find(any(msh.hanging(:, l1)));
@@ -45,11 +47,9 @@ function [msh] = mark_regions(msh)
         
         if (numel(regions) == 1)
             row = 6 * (regions == region + 1) + 7 * (regions == region);
-            newedges(row, idx - 1) = 0;
+            cols = find(any(newedges(1:2, :) == l1(idx)));
             
-            if (idx < numel(l1))
-                newedges(row, idx) = 0;
-            endif
+            newedges(row, cols) = 0;
         endif
     endfor
     
