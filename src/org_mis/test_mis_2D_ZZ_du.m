@@ -81,13 +81,22 @@ for i = 1 : 15
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
 
     # Determine elements to be refined.
-    to_refine = false(1, Nelems);
-    
-    estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, phi);
-    tol = mean(estimator);
-    
     refineable_elements = find(!any(msh.children));
-    to_refine(refineable_elements) = (estimator > tol);
+    
+    msh_new = mark_regions_2D(msh);
+    
+    [msh1, omega1, omega1_el_all] = msh2m_quadtree_submesh(msh_new, 1);
+    [msh2, omega2, omega2_el_all] = msh2m_quadtree_submesh(msh_new, 2);
+    
+    [~, omega1_el] = intersect(refineable_elements, omega1_el_all);
+    [~, omega2_el] = intersect(refineable_elements, omega2_el_all);
+    
+    estimator = zeros(1, numel(refineable_elements));
+    estimator(omega1_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh1, phi(omega1));
+    estimator(omega2_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh2, phi(omega2));
+    
+    crit = 4;
+    to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, 0.75, crit);
     
     # Save solution to file.
     fclose all;
@@ -111,7 +120,7 @@ for i = 1 : 15
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
     
     # Do refinement.
-    if (n_elems(i) >= Nelems_max || (tol <= tol_max / n_elems(i)))
+    if (n_elems(i) >= Nelems_max)
         break;
     else
         msh = msh2m_quadtree_refine(msh, find(to_refine));
