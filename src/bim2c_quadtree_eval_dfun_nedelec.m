@@ -20,4 +20,11 @@ function [dphi_x, dphi_y] = bim2c_quadtree_eval_dfun_nedelec(msh, iel, x, y)
                     (x - x1);
               zeros(size(x));
                    -(x - x2)].' / hx;
+    
+    # Fix zero values outside iel.
+    dphi_x(x < x1 | x > x2, :) = 0;
+    dphi_x(y < y1 | y > y2, :) = 0;
+    
+    dphi_y(x < x1 | x > x2, :) = 0;
+    dphi_y(y < y1 | y > y2, :) = 0;
 endfunction

@@ -15,4 +15,8 @@ function [phi] = bim2c_quadtree_eval_fun(msh, iel, x, y)
            -(x - x1) .* (y - y2);
             (x - x1) .* (y - y1);
            -(x - x2) .* (y - y1)].' / (hx * hy);
+    
+    # Fix zero values outside iel.
+    phi(x < x1 | x > x2, :) = 0;
+    phi(y < y1 | y > y2, :) = 0;
 endfunction
