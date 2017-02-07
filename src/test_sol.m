@@ -94,12 +94,21 @@ function [phi] = plot_phi5(msh, x, y)
             + bim2c_quadtree_eval_fun(msh, 8, x, y)(:, 3);
     
     phi = phi5 + 0.5 * phi11 + 0.5 * phi12;
+    
+    phi(x == 0.5 & y != 0.25) /= 2;
+    phi(y == 0.5 & x != 0.25) /= 2;
+    
+    phi(x == 0.5 & y == 0.25) /= 3;
+    phi(y == 0.5 & x == 0.25) /= 3;
+    
+    phi(x == 0.25 & y < 0.5) /= 2;
+    phi(y == 0.25 & x < 0.5) /= 2;
 endfunction
 
-x = linspace(0, 1, 100);
+x = linspace(0, 1, 101);
 y = x;
 
 [X, Y] = meshgrid(x, y);
 
 phi5 = reshape(plot_phi5(msh, X(:), Y(:)), size(X));
-#surf(X, Y, phi5);
+surf(X, Y, phi5);
