@@ -16,29 +16,34 @@ function [II, JJ, VV] = bim2a_quadtree_local_to_global(msh, A_loc, iel)
         locj = msh.full_to_reduced(msh.hanging(:, msh.t(jnode, iel)).');
       endif
       
-      if (! any (msh.hanging(:, msh.t([inode jnode], iel))))
-        loci_new = loci;
-        locj_new = locj;
+      hanging_ij = msh.hanging(:, msh.t([inode jnode], iel));
+      
+      if (!any(hanging_ij))
+        # Neither i nor j are hanging.
+        ii = loci;
+        jj = locj;
         
-        locv = 1;
-      elseif (all(any(msh.hanging(:, msh.t([inode jnode], iel)))))
-        [idx1, idx2] = meshgrid(loci, locj);
+        vv = 1;
+      elseif (!all(any(hanging_ij)))
+        # Either i or j is hanging.
+        ii = loci;
+        jj = locj;
         
-        loci_new = idx1(:);
-        locj_new = idx2(:);
-        
-        locv = [1/4 1/4 1/4 1/4];
+        vv = [1/2 1/2];
       else
-        loci_new = loci;
-        locj_new = locj;
+        # Both i and j are hanging.
+        [idx_ii, idx_jj] = meshgrid(loci, locj);
         
-        locv = [1/2 1/2];
+        ii = idx_ii(:);
+        jj = idx_jj(:);
+        
+        vv = [1/4 1/4 1/4 1/4];
       endif
       
-      II(idx : (idx + numel(locv) - 1)) = loci_new;
-      JJ(idx : (idx + numel(locv) - 1)) = locj_new;
-      VV(idx : (idx + numel(locv) - 1)) = A_loc(inode, jnode) * locv;
-      idx += numel(locv);
+      II(idx : (idx + numel(vv) - 1)) = ii;
+      JJ(idx : (idx + numel(vv) - 1)) = jj;
+      VV(idx : (idx + numel(vv) - 1)) = A_loc(inode, jnode) * vv;
+      idx += numel(vv);
     endfor
   endfor
   
