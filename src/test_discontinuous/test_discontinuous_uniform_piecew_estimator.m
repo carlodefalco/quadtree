@@ -152,12 +152,13 @@ for i = 1 : 10
     n_to_refine(i) = sum(to_refine);
     global_estimator(i) = norm(estimator, 2);
     global_error(i) = norm(err_L2, 2);
+    capacitance(i) = compute_capacitance(msh, A, u);
     
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", ...
          "err_node_norm1", "err_node_norm2", ...
          "err_edge_norm1", "err_edge_norm2", ...
-         "global_estimator", "global_error");
+         "global_estimator", "global_error", "capacitance");
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
 endfor
