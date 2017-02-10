@@ -62,7 +62,7 @@ for i = 1 : 10
     # Determine elements to be refined.
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
     to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, mean(estimator), 1);
-    keyboard
+    
     # Save solution to file.
     fclose all;
     basename = "./sol_reaction_uniform/sol";
