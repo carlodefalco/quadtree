@@ -26,7 +26,7 @@ function [to_refine] = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, tol, crit
             
             idx = find(estimator_sum >= tol * estimator_sum(end), 1);
             
-            threshold = estimator_sorted(idx) * 0.95;
+            threshold = estimator_sorted(idx) * 0.99;
 
             to_refine(refineable_elements) = (estimator >= threshold);
         otherwise
