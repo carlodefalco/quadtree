@@ -122,14 +122,14 @@ for i = 1 : 10
     endif
     fpl_vtk_write_field_quadmesh_nedelec(filename3, msh, {du_edge, "du_edge"}, 1);
     
-    save("-binary", sprintf([basename "_%d_data.mat"], i), "*");
-    
     n_dofs(i) = sum(!any(msh.hanging));
     n_elems(i) = numel(refineable_elements);
     n_to_refine(i) = sum(to_refine);
     global_estimator(i) = norm(estimator, 2);
     global_error(i) = norm(err_L2, 2);
     capacitance(i) = compute_capacitance(msh, A, u);
+    
+    save("-binary", sprintf([basename "_%d_data.mat"], i), "*");
     
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", ...

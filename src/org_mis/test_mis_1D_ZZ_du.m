@@ -111,6 +111,8 @@ for i = 1 : 15
     global_estimator(i) = norm(estimator, 2);
     capacitance(i) = C;
     
+    save("-binary", sprintf([basename "_%d_data.mat"], i), "*");
+    
     save("-text", [basename "_results.txt"], ...
          "n_dofs", "n_elems", "n_to_refine", "global_estimator", "capacitance");
     
