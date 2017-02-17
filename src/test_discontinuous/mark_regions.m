@@ -1,7 +1,7 @@
 function [msh] = mark_regions(msh)
     region = 1;
     
-    # Mark elements to discard.
+    # Mark elements in (region + 1).
     for iel = 1 : columns(msh.t)
         x = msh.p(1, msh.t(1:4, iel));
         
@@ -10,7 +10,7 @@ function [msh] = mark_regions(msh)
         endif
     endfor
 
-    # Mark edges to discard.
+    # Mark edges in (region + 1).
     for iedge = 1 : columns(msh.e)
         x = msh.p(1, msh.e(1:2, iedge));
         
