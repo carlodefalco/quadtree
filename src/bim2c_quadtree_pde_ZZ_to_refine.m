@@ -29,6 +29,11 @@ function [to_refine] = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, tol, crit
             threshold = estimator_sorted(idx) * 0.99;
 
             to_refine(refineable_elements) = (estimator >= threshold);
+        case 5
+            global_estimator = norm(estimator, 2);
+            
+            to_refine(refineable_elements) = (estimator / global_estimator > ...
+                                              tol ./ (2.^msh.level(refineable_elements)));
         otherwise
             error("bim2c_quadtree_pde_ZZ_to_refine: wrong criterion selected.");
     endswitch
