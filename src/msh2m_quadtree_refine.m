@@ -52,6 +52,8 @@ function msh = msh2m_quadtree_refine(msh, refinelist)
     ## Compute hanging sides.
     msh.hanging_sides = zeros(1, columns(msh.sides));
     
+    hanging_nodes = find(any(msh.hanging));
+    
     for ii = 1 : columns(msh.p)
         idx = find(all(msh.sides == msh.hanging(:, ii)
                        | flip(msh.sides) == msh.hanging(:, ii)));
@@ -102,10 +104,12 @@ function msh = do_refinement_recursive(msh, iel)
     neighbors = neighbors(is_hanging_neighbor);
     
     ## Refine all neighbors.
-    msh = msh2m_quadtree_refine(msh, neighbors);
+    for ii = 1 : numel(neighbors)
+        msh = do_refinement_recursive(msh, neighbors(ii));
+    endfor
     
     ## Refine current element.
-    msh = msh2m_quadtree_refine(msh, iel);
+    msh = do_refinement_recursive(msh, iel);
 endfunction
 
 function msh = do_refinement (msh, iel);
