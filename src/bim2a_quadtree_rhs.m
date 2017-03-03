@@ -1,6 +1,6 @@
 function rhs = bim2a_quadtree_rhs (msh, f, g)
     if (!isfield(msh, "B") || !isfield(msh, "size"))
-        error("bim2a_quadtree_laplacian: call bim2c_quadtree_mesh_properties on msh first.");
+        error("bim2a_quadtree_rhs: call bim2c_quadtree_mesh_properties on msh first.");
     end
 
     refineable_elements = find(!any(msh.children));
