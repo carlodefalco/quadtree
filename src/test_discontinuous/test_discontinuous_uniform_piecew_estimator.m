@@ -16,6 +16,7 @@ for i = 1 : 10
     y = linspace(0, 1, n(i));
 
     msh = msh2m_quadtree(x, y);
+    msh = bim2c_quadtree_mesh_properties(msh);
     
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);

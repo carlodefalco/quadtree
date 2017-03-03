@@ -17,6 +17,7 @@ Nelems_max = 10000;
 
 for i = 1 : 10
     fprintf("i = %d\n", i);
+    [msh, edge_space, node_space] = bim2c_quadtree_mesh_properties(msh, [], []);
     
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
@@ -47,7 +48,6 @@ for i = 1 : 10
     
     refineable_elements = find(!any(msh.children));
     
-    [msh, edge_space, node_space] = bim2c_quadtree_mesh_properties(msh, [], []);
     edge_space.shp = edge_space.shp(:, :, :, refineable_elements);
     edge_space.connectivity = edge_space.connectivity(:, refineable_elements);
     

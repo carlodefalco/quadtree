@@ -31,6 +31,7 @@ msh = msh2m_quadtree(x, y);
 msh = msh2m_quadtree_refine(msh, 1);
 
 msh.P = projector(msh);
+msh = bim2c_quadtree_mesh_properties(msh, [], []);
 
 i = 1;
 

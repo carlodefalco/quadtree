@@ -61,6 +61,7 @@ msh = msh2m_quadtree_submesh(msh, region);
 
 for i = 1:10
     fprintf("i = %d\n", i);
+    msh = bim2c_quadtree_mesh_properties(msh, [], []);
     
     # Build global matrix.
     Nnodes = columns(msh.p);

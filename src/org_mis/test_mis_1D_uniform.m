@@ -39,6 +39,7 @@ for i = 1 : numel(n)
     y = union(linspace(y_sc, 0, 10 * n(i)), linspace(0, y_ins, 10 * n(i)));
     
     msh = msh2m_quadtree(x, y);
+    msh = bim2c_quadtree_mesh_properties(msh, [], []);
     
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);

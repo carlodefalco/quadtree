@@ -15,6 +15,7 @@ for i = 1 : length(n)
     sides = 1:4;
 
     msh = msh2m_quadtree(x, y, region, sides);
+    msh = bim2c_quadtree_mesh_properties(msh, [], []);
     
     # Build global matrix.
     Nnodes = columns(msh.p);
