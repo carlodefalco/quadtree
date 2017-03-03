@@ -1,37 +1,33 @@
 function A = bim2a_quadtree_reaction (msh, delta, zeta)
-  real_elem = find (! any (msh.children));
-  
-  nprocs = 4;
-  
-  # Serial process if mesh has few elements.
-  if (columns(msh.t) < 100)
-    nprocs = 1;
-  endif
-  
-  [II, JJ, VV] = parcellfun(nprocs, @(iel) local_to_global(msh, delta, zeta, iel),
-                            num2cell(real_elem), 'UniformOutput', false,
-                            'VerboseLevel', 0);
-  
-  II = vertcat(II{:});
-  JJ = vertcat(JJ{:});
-  VV = vertcat(VV{:});
-  
-  A = sparse (II, JJ, VV, numel (msh.reduced_to_full),
-              numel (msh.reduced_to_full));
-endfunction
+    if (!isfield(msh, "B") || !isfield(msh, "size"))
+        error("bim2a_quadtree_laplacian: call bim2c_quadtree_mesh_properties on msh first.");
+    end
 
-function [II, JJ, VV] = local_to_global (msh, delta, zeta, iel)
-  coords = msh.p(:, msh.t(1:4, iel));
-  
-  hx = diff(coords(1, [1, 2]));
-  hy = diff(coords(2, [1, 3]));
-  
-  ## A_loc = local_matrix (hx, hy, delta(iel), zeta(msh.t(1:4, iel)));
-  A_loc = __reaction_local_matrix__ (hx, hy, delta(iel), zeta(msh.t(1:4, iel)));
-  
-  [II, JJ, VV] = bim2a_quadtree_local_to_global(msh, A_loc, iel);
-endfunction
+    refineable_elements = find(!any(msh.children));
+    elems = msh.t(1:4, refineable_elements);
 
-function A_loc = local_matrix (hx, hy, delta_loc, zeta_loc)
-  A_loc = delta_loc * sparse(diag(zeta_loc)) * hx * hy / 4;
+    Nnodes = columns(msh.p);
+    Nelems = numel(refineable_elements);
+    
+    II = reshape(repmat(elems, 4, 1), 4, 4, Nelems);
+    JJ = reshape(repmat(elems(:)', 4, 1), 4, 4, Nelems);
+    
+    VV = zeros(4, 4, Nelems);
+    
+    hx = msh.size(1, refineable_elements);
+    hy = msh.size(2, refineable_elements);
+    
+    zeta = zeta(elems);
+    
+    VV(1, 1, :) = zeta(1, :) .* hx .* hy / 4;
+    VV(2, 2, :) = zeta(2, :) .* hx .* hy / 4;
+    VV(3, 3, :) = zeta(3, :) .* hx .* hy / 4;
+    VV(4, 4, :) = zeta(4, :) .* hx .* hy / 4;
+    
+    VV .*= repmat(reshape(delta(refineable_elements), 1, 1, Nelems), 4, 4, 1);
+    
+    A = sparse(II, JJ, VV, Nnodes, Nnodes);
+    
+    # Change basis.
+    A = msh.B.' * A * msh.B;
 endfunction

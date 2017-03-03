@@ -1,52 +1,32 @@
 function rhs = bim2a_quadtree_rhs (msh, f, g)
-  real_elem = find (! any (msh.children));
+    if (!isfield(msh, "B") || !isfield(msh, "size"))
+        error("bim2a_quadtree_laplacian: call bim2c_quadtree_mesh_properties on msh first.");
+    end
 
-  nprocs = 4;
-  
-  # Serial process if mesh has few elements.
-  if (columns(msh.t) < 100)
-    nprocs = 1;
-  endif
-  
-  [II, VV] = parcellfun(nprocs, @(iel) local_to_global(msh, f, g, iel),
-                            num2cell(real_elem), 'UniformOutput', false,
-                            'VerboseLevel', 0);
-  
-  II = vertcat(II{:});
-  VV = vertcat(VV{:});
+    refineable_elements = find(!any(msh.children));
+    elems = msh.t(1:4, refineable_elements);
 
-  rhs = sparse (II, 1, VV, numel (msh.reduced_to_full), 1);
-endfunction
-
-function [II, VV] = local_to_global(msh, f, g, iel)
-  coords = msh.p(:, msh.t(1:4, iel));
-  
-  hx = diff(coords(1, [1, 2]));
-  hy = diff(coords(2, [1, 3]));
-  
-  rhs_loc = local_rhs (hx, hy, f(iel), g(msh.t(1:4, iel)));
-  
-  II = VV = zeros(4, 1);
-  idx = 1;
-  
-  for inode = 1:4
-    if (! any (msh.hanging(:, msh.t(inode, iel))))
-      loci = msh.full_to_reduced(msh.t(inode, iel));
-      locv = 1;
-    else
-      loci = msh.full_to_reduced(msh.hanging(:, msh.t(inode, iel)).');
-      locv = [1/2 1/2];
-    endif
-      
-    II(idx : (idx + numel(locv) - 1)) = loci;
-    VV(idx : (idx + numel(locv) - 1)) = rhs_loc(inode) * locv;
-    idx += numel(loci);
-  endfor
-  
-  II = II(1 : (idx - 1));
-  VV = VV(1 : (idx - 1));
-endfunction
-
-function rhs_loc = local_rhs (hx, hy, f_loc, g_loc)
-  rhs_loc = f_loc * g_loc * hx * hy / 4;
+    Nnodes = columns(msh.p);
+    Nelems = numel(refineable_elements);
+    
+    II = elems;
+    
+    VV = zeros(4, Nelems);
+    
+    hx = msh.size(1, refineable_elements);
+    hy = msh.size(2, refineable_elements);
+    
+    g = g(elems);
+    
+    VV(1, :) = g(1) .* hx .* hy / 4;
+    VV(2, :) = g(2) .* hx .* hy / 4;
+    VV(3, :) = g(3) .* hx .* hy / 4;
+    VV(4, :) = g(4) .* hx .* hy / 4;
+    
+    VV .*= repmat(reshape(f(refineable_elements), 1, Nelems), 4, 1);
+    
+    rhs = sparse(II, 1, VV, Nnodes, 1);
+    
+    # Change basis.
+    rhs = msh.B.' * rhs;
 endfunction
