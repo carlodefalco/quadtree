@@ -54,7 +54,7 @@ function msh = msh2m_quadtree_refine(msh, refinelist)
     
     hanging_nodes = find(any(msh.hanging));
     
-    for ii = 1 : columns(msh.p)
+    for ii = hanging_nodes
         idx = find(all(msh.sides == msh.hanging(:, ii)
                        | flip(msh.sides) == msh.hanging(:, ii)));
         
