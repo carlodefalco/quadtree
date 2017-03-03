@@ -60,10 +60,18 @@ function [t, varargout] = ...
       case "nodes"
         varargout{nn} = computearea(p, e, t, nodes, weights, "quad");
         
+      # Element sizes [hx; hy].
+      case "hx_hy"
+        varargout{nn} = computearea(p, e, t, nodes, weights, "size");
+        
       # Element areas.
       case "area"
         varargout{nn} = computearea(p, e, t, nodes, weights, "area");
         
+      # Change basis.
+      case "change_basis"
+        varargout{nn} = changebasis(msh);
+      
       otherwise
         warning (["msh2m_quadtree_geometrical_properties: ", ...
                   "unexpected value in property string. ", ...
@@ -103,7 +111,30 @@ function [out] = computearea(p, e, t, x, w, request)
     endfor
     
     out = nodes;
+  elseif (request == "size")
+    out = [hx; hy];
   elseif (request == "area")
     out = sum(wjacdet, 1);
   endif
+endfunction
+
+function [B] = changebasis(msh)
+    Nnodes = columns(msh.p);
+    
+    hanging = find(any(msh.hanging));
+    non_hanging = find(!any(msh.hanging));
+    
+    # Identity block.
+    II = non_hanging;
+    JJ = msh.full_to_reduced(non_hanging);
+    VV = ones(size(II));
+    
+    B = sparse(II, JJ, VV, Nnodes, numel(non_hanging));
+    
+    # Contributions due to hanging nodes.
+    II = repmat(hanging, [2, 1])(:);
+    JJ = msh.full_to_reduced(msh.hanging(:, hanging))(:);
+    VV = 0.5 * ones(size(II));
+    
+    B += sparse(II, JJ, VV, Nnodes, numel(non_hanging));
 endfunction
