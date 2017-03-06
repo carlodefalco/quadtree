@@ -5,9 +5,13 @@ function [msh] = mark_regions_2D(msh)
     for iel = 1 : columns(msh.t)
         coords = msh.p(:, msh.t(1:4, iel));
         
-        if (max(coords(1, :)) <= msh.dim.x_sc_min ||
-            min(coords(1, :)) >= msh.dim.x_sc_max ||
-            min(coords(2, :)) >= 0)
+        x_min = min(coords(1, :));
+        x_max = max(coords(1, :));
+        y_min = min(coords(2, :));
+        
+        if ((x_max <= msh.dim.x_sc_min && x_min > msh.dim.x_min) ||
+            (x_min >= msh.dim.x_sc_max && x_max < msh.dim.x_max) ||
+            y_min >= 0)
             
             msh.t(5, iel) = region + 1;
         endif
@@ -17,9 +21,13 @@ function [msh] = mark_regions_2D(msh)
     for iedge = 1 : columns(msh.e)
         coords = msh.p(:, msh.e(1:2, iedge));
         
-        if (max(coords(1, :)) <= msh.dim.x_sc_min ||
-            min(coords(1, :)) >= msh.dim.x_sc_max ||
-            min(coords(2, :)) >= 0)
+        x_min = min(coords(1, :));
+        x_max = max(coords(1, :));
+        y_min = min(coords(2, :));
+        
+        if ((x_max <= msh.dim.x_sc_min && x_min > msh.dim.x_min) ||
+            (x_min >= msh.dim.x_sc_max && x_max < msh.dim.x_max) ||
+            y_min >= 0)
             
             msh.e(7, iedge) = region + 1;
         endif
