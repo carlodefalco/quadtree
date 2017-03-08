@@ -13,7 +13,7 @@ function fpl_vtk_write_field_quadmesh_nedelec (basename, msh, sidedata, endfile)
         # Add nodes to new_msh.
         new_msh.p(:, end+1 : end+4) = nodes;
         
-        # Evaluate basis functions at the current element vertices.
+        # Evaluate Nédélec basis functions at the current element vertices.
         [dphi_x, dphi_y] = bim2c_quadtree_eval_dfun_nedelec(msh, iel, nodes(1, :), nodes(2, :));
         
         # Multiply sidedata by the corresponding basis functions.
