@@ -12,9 +12,10 @@ function fpl_vtk_write_field_quadmesh_nedelec (basename, msh, sidedata, endfile)
         new_msh.p(:, end+1 : end+4) = nodes;
         
         [dphi_x, dphi_y] = bim2c_quadtree_eval_dfun_nedelec(msh, iel, nodes(1, :), nodes(2, :));
-        data = sidedata{ii, 1}(msh.ts(:, iel));
         
         for ii = 1 : size(sidedata, 1)
+            data = sidedata{ii, 1}(msh.ts(:, iel));
+            
             nodedata_x{ii, 1}(end+1 : end+4, 1) = dphi_x * data(:);
             nodedata_y{ii, 1}(end+1 : end+4, 1) = dphi_y * data(:);
         endfor
