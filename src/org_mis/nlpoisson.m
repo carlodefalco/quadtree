@@ -53,8 +53,27 @@ function [phiout, resnrm, iter, C] = ...
         delta_phi = bim2a_quadtree_solve(msh, mat, rhs, phi0, dnodes);
         
         # Compute capacitance.
-        gate = msh.full_to_reduced(msh2m_nodes_on_sides(msh, 3));
-        delta_Q = sum(mat(gate, :) * delta_phi(non_hanging));
-        C = delta_Q / (msh.dim.x_max - msh.dim.x_min); # Per unit length.
+        x = msh.p(1, :).';
+        gate1 = msh.full_to_reduced(
+                    intersect(msh2m_nodes_on_sides(msh, 3), find(x <= msh.dim.x_sc_max))
+                );
+        gate2 = msh.full_to_reduced(
+                    intersect(msh2m_nodes_on_sides(msh, 3), find(x >= msh.dim.x_sc_max & x <= msh.dim.x_bulk_max))
+                );
+        gate3 = msh.full_to_reduced(
+                    intersect(msh2m_nodes_on_sides(msh, 3), find(x >= msh.dim.x_bulk_max))
+                );
+        
+        # Integrate along x-direction.
+        delta_Q1 = 2 * sum(mat(gate1, :) * delta_phi(non_hanging));
+        delta_Q2 = 2 * sum(mat(gate2, :) * delta_phi(non_hanging));
+        delta_Q3 = 2 * sum(mat(gate3, :) * delta_phi(non_hanging));
+        
+        # Integrate along z-direction.
+        C1 = delta_Q1 * 2 * (msh.dim.x_sc_max - msh.dim.x_min);
+        C2 = delta_Q2 * 2 * (msh.dim.x_bulk_max - msh.dim.x_min);
+        C3 = delta_Q3 * 2 * (msh.dim.x_max - msh.dim.x_min);
+        
+        C = C1 + C2 + C3;
     endif
 endfunction
