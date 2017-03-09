@@ -28,8 +28,9 @@ x_drain_max  = x_drain_min  + 2e-5;
 x_sc_max     = 8e-5;
 x_max        = 9e-5;
 
-x_gate_min = x_source_max - 1e-5;
-x_gate_max = x_drain_min  + 1e-5;
+L = 10e-6;
+x_gate_min = x_source_max - L;
+x_gate_max = x_drain_min  + L;
 
 y_sc      = -35e-9;
 y_contact = -25e-9;
