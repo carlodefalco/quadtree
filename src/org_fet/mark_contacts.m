@@ -93,7 +93,7 @@ function [msh] = mark_contacts(msh)
                   s2;
                   zeros(2, ne);
                   newside_s * ones(1, ne);
-                  region * ones(1, ne);
+                  region * ones(1, ne) - 1;
                   region * ones(1, ne) + 1];
     
     # Drain.
