@@ -1,7 +1,8 @@
 ## Solve the non-linear Poisson problem using Newton's algorithm.
 function [phiout, resnrm, iter, C] = ...
-         nlpoisson(msh, phi0, A, M, dnodes, charge_n)
+         nlpoisson(msh, phi0, A, M, gate, source, drain, charge_n)
     
+    dnodes = unique([gate, source, drain]);
     non_hanging = find(msh.full_to_reduced);
     
     # Newton's algorithm.
@@ -47,14 +48,14 @@ function [phiout, resnrm, iter, C] = ...
         
         # Boundary conditions.
         y = msh.p(2, :).';
-        phi0 = (y - msh.dim.y_sc) ./ (msh.dim.y_ins - msh.dim.y_sc);
+        delta_phi0 = (y - msh.dim.y_contact) ./ (msh.dim.y_ins - msh.dim.y_sc);
+        delta_phi0(y < msh.dim.y_contact) = 0;
         
         # Compute solution.
-        delta_phi = bim2a_quadtree_solve(msh, mat, rhs, phi0, dnodes);
+        delta_phi = bim2a_quadtree_solve(msh, mat, rhs, delta_phi0, dnodes);
         
         # Compute capacitance.
-        gate = msh.full_to_reduced(msh2m_nodes_on_sides(msh, 3));
-        delta_Q = sum(mat(gate, :) * delta_phi(non_hanging));
+        delta_Q = sum(mat(msh.full_to_reduced(gate), :) * delta_phi(non_hanging));
         C = delta_Q / (msh.dim.x_max - msh.dim.x_min); # Per unit length.
     endif
 endfunction

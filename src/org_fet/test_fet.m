@@ -19,18 +19,19 @@ quadrature.gw = gw;
 charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
+L = 10e-6; # Channel length.
 x_min        = 0e-5;
-x_sc_min     = 1e-5;
-x_source_min = 2e-5;
+x_sc_min     = x_min        + 1e-5;
+x_source_min = x_sc_min     + 1e-5;
 x_source_max = x_source_min + 2e-5;
-x_drain_min  = x_source_max + 1e-5;
+x_drain_min  = x_source_max + L;
 x_drain_max  = x_drain_min  + 2e-5;
-x_sc_max     = 8e-5;
-x_max        = 9e-5;
+x_sc_max     = x_drain_max  + 1e-5;
+x_max        = x_sc_max     + 1e-5;
 
-L = 10e-6;
-x_gate_min = x_source_max - L;
-x_gate_max = x_drain_min  + L;
+L_ov = 1e-5; # Overlap length.
+x_gate_min = x_source_max - L_ov;
+x_gate_max = x_drain_min  + L_ov;
 
 y_sc      = -35e-9;
 y_contact = -25e-9;
@@ -38,9 +39,11 @@ y_ins     = 441e-9;
 
 x = unique([linspace(x_min, x_sc_min, 3), ...
             linspace(x_sc_min, x_source_min, 3), ...
-            linspace(x_source_min, x_source_max, 3), ...
+            linspace(x_source_min, x_gate_min, 2), ...
+            linspace(x_gate_min, x_source_max, 2), ...
             linspace(x_source_max, x_drain_min, 3), ...
-            linspace(x_drain_min, x_drain_max, 3), ...
+            linspace(x_drain_min, x_gate_max, 2), ...
+            linspace(x_gate_max, x_drain_max, 3), ...
             linspace(x_drain_max, x_sc_max, 3), ...
             linspace(x_sc_max, x_max, 3)]);
 y = unique([linspace(y_sc, y_contact, 2), ...
@@ -108,15 +111,15 @@ for i = 1 : 15
                           x <= x_gate_max + eps(x_gate_max)))';
     source = msh2m_nodes_on_sides(msh, 5);
     drain  = msh2m_nodes_on_sides(msh, 6);
-    dnodes = unique([gate, source, drain]);
     
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = ((y - msh.dim.y_sc) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
+    phi0 = ((y - msh.dim.y_contact) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
            (msh.dim.y_ins - msh.dim.y_sc);
+    phi0(y < msh.dim.y_contact) = material.PhiB;
     
     # Compute solution and error.
-    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
+    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), gate, source, drain, charge_n);
     
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
@@ -136,8 +139,14 @@ for i = 1 : 15
     estimator(omega1_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh1, phi(omega1));
     estimator(omega2_el) = bim2c_quadtree_pde_ZZ_estimator_du(msh2, phi(omega2));
     
-    crit = 1;
-    to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, mean(estimator), crit);
+    to_refine = false(1, columns(msh.t));
+    
+    if (mod(i, 2) != 0)
+        crit = 1;
+        to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, mean(estimator), crit);
+    else
+        to_refine(refineable_elements) = true;
+    end
     
     # Save solution to file.
     fclose all;
