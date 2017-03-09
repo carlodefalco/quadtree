@@ -120,7 +120,7 @@ for i = 1 : 15
     
     # Compute solution and error.
     [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), gate, source, drain, charge_n);
-    keyboard
+    
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
 
