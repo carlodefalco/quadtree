@@ -48,7 +48,7 @@ function [phiout, resnrm, iter, C] = ...
         
         # Boundary conditions.
         y = msh.p(2, :).';
-        delta_phi0 = (y - msh.dim.y_contact) ./ (msh.dim.y_ins - msh.dim.y_sc);
+        delta_phi0 = (y - msh.dim.y_contact) ./ (msh.dim.y_ins - msh.dim.y_contact);
         delta_phi0(y < msh.dim.y_contact) = 0;
         
         # Compute solution.

@@ -115,12 +115,12 @@ for i = 1 : 15
     # Initial guess.
     Vg = 10; # [V].
     phi0 = ((y - msh.dim.y_contact) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
-           (msh.dim.y_ins - msh.dim.y_sc);
+           (msh.dim.y_ins - msh.dim.y_contact);
     phi0(y < msh.dim.y_contact) = material.PhiB;
     
     # Compute solution and error.
     [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), gate, source, drain, charge_n);
-    
+    keyboard
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
 
