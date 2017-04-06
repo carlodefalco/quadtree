@@ -1,4 +1,4 @@
-function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
+function [to_refine] = msh2m_to_refine_fet(msh, material, constants,
                                            A_fun, M_fun, phi,
                                            charge_n, iel, tol)
     nodes = msh.t(1:4, iel);
