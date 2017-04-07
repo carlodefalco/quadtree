@@ -1,6 +1,6 @@
 ## Solve the non-linear Poisson problem using Newton's algorithm.
 function [phiout, resnrm, iter, C] = ...
-         nlpoisson(msh, phi0, A, M, gate, source, drain, charge_n)
+         nlpoisson_fet(msh, phi0, A, M, gate, source, drain, charge_n)
     
     dnodes = unique([gate, source, drain]);
     non_hanging = find(msh.full_to_reduced);
@@ -56,6 +56,6 @@ function [phiout, resnrm, iter, C] = ...
         
         # Compute capacitance.
         delta_Q = sum(mat(msh.full_to_reduced(gate), :) * delta_phi(non_hanging));
-        C = delta_Q / (msh.dim.x_max - msh.dim.x_min); # Per unit length.
+        C = 8.1e-7 * delta_Q / (msh.dim.x_gate_max - msh.dim.x_gate_min);
     endif
 endfunction

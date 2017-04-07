@@ -1,6 +1,6 @@
 function material = material_properties_N2200 (constants, PhiB, sigman)
-  material.eps_semic_r = 2.90; # [~]
-  material.eps_ins_r   = 2.82222; # [~]
+  material.eps_semic_r = 2.9; # [~]
+  material.eps_ins_r   = 3.6; # [~]
   
   material.eps_semic = constants.eps0 * material.eps_semic_r; # [F / m]
   material.eps_ins   = constants.eps0 * material.eps_ins_r; # [F / m]

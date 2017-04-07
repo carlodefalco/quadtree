@@ -62,6 +62,9 @@ msh.dim.x_drain_max  = x_drain_max;
 msh.dim.x_sc_max     = x_sc_max;
 msh.dim.x_max        = x_max;
 
+msh.dim.x_gate_min = x_gate_min;
+msh.dim.x_gate_max = x_gate_max;
+
 msh.dim.y_sc      = y_sc;
 msh.dim.y_contact = y_contact;
 msh.dim.y_ins     = y_ins;
@@ -91,6 +94,9 @@ for i = 1 : 15
     msh.dim.x_sc_max     = x_sc_max;
     msh.dim.x_max        = x_max;
     
+    msh.dim.x_gate_min = x_gate_min;
+    msh.dim.x_gate_max = x_gate_max;
+    
     msh.dim.y_sc      = y_sc;
     msh.dim.y_contact = y_contact;
     msh.dim.y_ins     = y_ins;
@@ -119,7 +125,7 @@ for i = 1 : 15
     phi0(y < msh.dim.y_contact) = material.PhiB;
     
     # Compute solution and error.
-    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), gate, source, drain, charge_n);
+    [phi, res, niter, C] = nlpoisson_fet(msh, phi0, A(msh), M(msh), gate, source, drain, charge_n);
     
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
