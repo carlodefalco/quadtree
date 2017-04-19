@@ -27,6 +27,8 @@ function [phiout, resnrm, iter, C] = ...
         
         # Compute solution.
         dphi = -bim2a_quadtree_solve(msh, jac, res, dphi_bc, dnodes);
+        dphi(dphi >  0.1) =  0.1;
+        dphi(dphi < -0.1) = -0.1;
         
         phi += dphi;
         
