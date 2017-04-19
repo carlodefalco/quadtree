@@ -163,7 +163,7 @@ for i = 1 : 15
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"; phi0, "phi0"}, ...
+    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, ...
                                                 {estimator.', "estimator"}, 1);
     
     n_dofs(i) = sum(!any(msh.hanging));
