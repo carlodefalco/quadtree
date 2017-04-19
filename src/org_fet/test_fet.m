@@ -120,13 +120,15 @@ for i = 1 : 15
     
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = ((y - msh.dim.y_contact) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
-           (msh.dim.y_ins - msh.dim.y_contact);
-    phi0(y < msh.dim.y_contact) = material.PhiB;
+    phi0 = material.PhiB * ones(size(x));
+    under_gate = (x >= x_gate_min - eps(x_gate_min)
+                  & x <= x_gate_max + eps(x_gate_max));
+    phi0(under_gate) = ((y(under_gate) - msh.dim.y_contact) * Vg - (y(under_gate) - msh.dim.y_ins) * material.PhiB) ./ ...
+                       (msh.dim.y_ins - msh.dim.y_contact);
     
     # Compute solution and error.
     [phi, res, niter, C] = nlpoisson_fet(msh, phi0, A(msh), M(msh), gate, source, drain, charge_n);
-    
+    niter
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
 
@@ -161,7 +163,7 @@ for i = 1 : 15
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, ...
+    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"; phi0, "phi0"}, ...
                                                 {estimator.', "estimator"}, 1);
     
     n_dofs(i) = sum(!any(msh.hanging));
