@@ -27,7 +27,7 @@ function [to_refine] = msh2m_to_refine_mis(msh, material, constants,
     phi_dnodes((numel(nodes)+1) : end-1) = mean(phi_dnodes(hanging_sides));
     
     # Compute solution and evaluate error.
-    phi_iel = nlpoisson(msh_iel, phi_dnodes, A_iel, M_iel, dnodes_iel, charge_n);
+    phi_iel = nlpoisson_dirichlet(msh_iel, phi_dnodes, A_iel, M_iel, dnodes_iel, charge_n);
     
     to_refine = (abs(phi_iel(end) - mean(phi(nodes))) > tol / (2^msh.level(iel)));
 endfunction

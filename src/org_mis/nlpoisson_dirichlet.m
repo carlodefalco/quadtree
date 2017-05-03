@@ -1,6 +1,6 @@
 ## Solve the non-linear Poisson problem using Newton's algorithm.
 function [phiout, resnrm, iter, C] = ...
-         nlpoisson(msh, phi0, A, M, bulk, gate, constants, material, charge_n)
+         nlpoisson_dirichlet(msh, phi0, A, M, dnodes, charge_n)
     
     non_hanging = find(msh.full_to_reduced);
     
@@ -14,10 +14,6 @@ function [phiout, resnrm, iter, C] = ...
     # Boundary conditions.
     dphi_bc = zeros(size(phi));
     
-    M_bulk = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 1);
-    
-    bulk_red = msh.full_to_reduced(bulk);
-    
     for iter = 1 : maxit
         # Assemble system.
         phiout = phi(non_hanging);
@@ -28,20 +24,8 @@ function [phiout, resnrm, iter, C] = ...
         
         jac = A - M .* sparse(diag(drho));
         
-        # Bulk contact.
-        E = -M_bulk \ res(bulk_red); # Outward normal electric field.
-        
-        [PhiBcorr, dPhiBcorr] = barrier_lowering(E, material, constants);
-        
-        res(bulk_red) = M_bulk * (phi(bulk) - (material.PhiB + constants.Vth * PhiBcorr));
-        
-        for col = 1 : columns(jac)
-            jac(bulk_red, col) .*= constants.Vth * dPhiBcorr;
-        end
-        jac(bulk_red, bulk_red) += M_bulk;
-        
         # Compute solution.
-        dphi = -bim2a_quadtree_solve(msh, jac, res, dphi_bc, gate);
+        dphi = -bim2a_quadtree_solve(msh, jac, res, dphi_bc, dnodes);
         
         phi += dphi;
         
@@ -66,7 +50,7 @@ function [phiout, resnrm, iter, C] = ...
         phi0 = (y - msh.dim.y_sc) ./ (msh.dim.y_ins - msh.dim.y_sc);
         
         # Compute solution.
-        delta_phi = bim2a_quadtree_solve(msh, mat, rhs, phi0, union(bulk, gate));
+        delta_phi = bim2a_quadtree_solve(msh, mat, rhs, phi0, dnodes);
         
         # Compute capacitance.
         x = msh.p(1, :).';

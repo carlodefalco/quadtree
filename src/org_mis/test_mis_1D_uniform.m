@@ -72,10 +72,9 @@ for i = 1 : numel(n)
     # Bulk and gate contacts.
     bulk = msh2m_nodes_on_sides(msh, 1);
     gate = msh2m_nodes_on_sides(msh, 3);
-    dnodes = union(bulk, gate);
     
     # Compute solution and error.
-    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
+    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), bulk, gate, constants, material, charge_n);
     
     nout = zeros(size(phi));
     nout(scnodes) = -charge_n(phi(scnodes)) / constants.q;

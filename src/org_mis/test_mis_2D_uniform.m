@@ -42,6 +42,20 @@ for i = 1 : numel(n)
     msh = msh2m_quadtree(x, y);
     msh = bim2c_quadtree_mesh_properties(msh, [], []);
     
+    # Mark edge labels.
+    for iedge = 1 : columns(msh.e)
+        coords = msh.p(:, msh.e(1:2, iedge));
+        
+        x_min = min(coords(1, :));
+        
+        if (msh.e(5, iedge) == 1 &&
+            x_min >= x_bulk_max)
+            
+            msh.e(5, iedge) = 5;
+        endif
+    endfor
+    msh.onboundary(msh2m_nodes_on_sides(msh, 5)) = 5;
+    
     Nnodes = columns(msh.p);
     Nelems = columns(msh.t);
     
@@ -72,12 +86,11 @@ for i = 1 : numel(n)
            (msh.dim.y_ins - msh.dim.y_sc);
     
     # Bulk and gate contacts.
-    bulk = intersect(msh2m_nodes_on_sides(msh, 1), find(x <= msh.dim.x_bulk_max));
+    bulk = msh2m_nodes_on_sides(msh, 1);
     gate = msh2m_nodes_on_sides(msh, 3);
-    dnodes = union(bulk, gate);
     
     # Compute solution and error.
-    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), dnodes, charge_n);
+    [phi, res, niter, C] = nlpoisson(msh, phi0, A(msh), M(msh), bulk, gate, constants, material, charge_n);
     
     nout = zeros(size(phi));
     nout(scnodes) = -charge_n(phi(scnodes)) / constants.q;
