@@ -10,13 +10,11 @@ function [msh] = mark_contacts(msh)
         y_max = max(coords(2, :));
         
         if (# Source.
-            (x_min >= msh.dim.x_source_min &&
-             x_max <= msh.dim.x_source_max &&
-             y_max <= msh.dim.y_contact) ||
+            (x_max <= msh.dim.x_source &&
+             y_max <= msh.dim.y_sc) ||
             # Drain.
-            (x_min >= msh.dim.x_drain_min &&
-             x_max <= msh.dim.x_drain_max &&
-             y_max <= msh.dim.y_contact))
+            (x_min >= msh.dim.x_drain &&
+             y_max <= msh.dim.y_sc))
             
             msh.t(5, iel) = region + 1;
         endif
@@ -31,90 +29,98 @@ function [msh] = mark_contacts(msh)
         y_max = max(coords(2, :));
         
         if (# Source.
-            (x_min >= msh.dim.x_source_min &&
-             x_max <= msh.dim.x_source_max &&
-             y_max <= msh.dim.y_contact) ||
+            (x_max <= msh.dim.x_source &&
+             y_max <= msh.dim.y_sc) ||
             # Drain.
-            (x_min >= msh.dim.x_drain_min &&
-             x_max <= msh.dim.x_drain_max &&
-             y_max <= msh.dim.y_contact))
+            (x_min >= msh.dim.x_drain &&
+             y_max <= msh.dim.y_sc))
             
             msh.e(7, iedge) = region + 1;
         endif
     endfor
 
     # Mark internal edges.
-    # Source left.
-    l1 = find(msh.p(1, :) == msh.dim.x_source_min &
-              msh.p(2, :) <= msh.dim.y_contact);
+    # Source top.
+    l1 = find(msh.p(1, :) <= msh.dim.x_source &
+              msh.p(2, :) == msh.dim.y_sc);
     [~, idx] = sort(msh.p(1, l1));
     l1 = l1(idx);
     
+    s1 = [l1(1:end-1)];
+    s2 = [l1(2:end)  ];
+
+    ne = numel(s1);
+    newside_s1 = 5;
+
+    newedges_s1 = [s1;
+                   s2;
+                   zeros(2, ne);
+                   newside_s1 * ones(1, ne);
+                   region * ones(1, ne) - 1;
+                   region * ones(1, ne) + 1];
+    
     # Source right.
-    l2 = find(msh.p(1, :) == msh.dim.x_source_max &
-              msh.p(2, :) <= msh.dim.y_contact);
+    l2 = find(msh.p(1, :) == msh.dim.x_source &
+              msh.p(2, :) <= msh.dim.y_sc);
     [~, idx] = sort(msh.p(1, l2));
     l2 = l2(idx);
     
-    # Source top.
-    l3 = find(msh.p(1, :) >= msh.dim.x_source_min &
-              msh.p(1, :) <= msh.dim.x_source_max &
-              msh.p(2, :) == msh.dim.y_contact);
+    s1 = [l2(1:end-1)];
+    s2 = [l2(2:end)  ];
+
+    ne = numel(s1);
+    newside_s2 = 6;
+
+    newedges_s2 = [s1;
+                   s2;
+                   zeros(2, ne);
+                   newside_s2 * ones(1, ne);
+                   region * ones(1, ne) - 1;
+                   region * ones(1, ne) + 1];
+    
+    # Drain left.
+    l3 = find(msh.p(1, :) == msh.dim.x_drain &
+              msh.p(2, :) <= msh.dim.y_sc);
     [~, idx] = sort(msh.p(1, l3));
     l3 = l3(idx);
     
-    # Drain left.
-    l4 = find(msh.p(1, :) == msh.dim.x_drain_min &
-              msh.p(2, :) <= msh.dim.y_contact);
+    d1 = [l3(1:end-1)];
+    d2 = [l3(2:end)  ];
+
+    ne = numel(d1);
+    newside_d1 = 7;
+
+    newedges_d1 = [d1;
+                   d2;
+                   zeros(2, ne);
+                   newside_d1 * ones(1, ne);
+                   region * ones(1, ne) - 1;
+                   region * ones(1, ne) + 1];
+    
+    # Drain top.
+    l4 = find(msh.p(1, :) >= msh.dim.x_drain &
+              msh.p(2, :) == msh.dim.y_sc);
     [~, idx] = sort(msh.p(1, l4));
     l4 = l4(idx);
     
-    # Drain right.
-    l5 = find(msh.p(1, :) == msh.dim.x_drain_max &
-              msh.p(2, :) <= msh.dim.y_contact);
-    [~, idx] = sort(msh.p(1, l5));
-    l5 = l5(idx);
-    
-    # Drain top.
-    l6 = find(msh.p(1, :) >= msh.dim.x_drain_min &
-              msh.p(1, :) <= msh.dim.x_drain_max &
-              msh.p(2, :) == msh.dim.y_contact);
-    [~, idx] = sort(msh.p(1, l6));
-    l6 = l6(idx);
-    
-    # Source.
-    s1 = [l1(1:end-1) l2(1:end-1) l3(1:end-1)];
-    s2 = [l1(2:end)   l2(2:end)   l3(2:end)  ];
-
-    ne = numel(s1);
-    newside_s = 5;
-
-    newedges_s = [s1;
-                  s2;
-                  zeros(2, ne);
-                  newside_s * ones(1, ne);
-                  region * ones(1, ne) - 1;
-                  region * ones(1, ne) + 1];
-    
-    # Drain.
-    d1 = [l4(1:end-1) l5(1:end-1) l6(1:end-1)];
-    d2 = [l4(2:end)   l5(2:end)   l6(2:end)  ];
+    d1 = [l4(1:end-1)];
+    d2 = [l4(2:end)  ];
 
     ne = numel(d1);
-    newside_d = 6;
+    newside_d2 = 8;
 
-    newedges_d = [d1;
-                  d2;
-                  zeros(2, ne);
-                  newside_d * ones(1, ne);
-                  region * ones(1, ne);
-                  region * ones(1, ne) + 1];
+    newedges_d2 = [d1;
+                   d2;
+                   zeros(2, ne);
+                   newside_d2 * ones(1, ne);
+                   region * ones(1, ne) - 1;
+                   region * ones(1, ne) + 1];
     
-    newedges = [newedges_s newedges_d];
+    newedges = [newedges_s1 newedges_s2 newedges_d1 newedges_d2];
     
     # Unmark nodes hanging from one side but not from the other.
-    l_s = unique([l1 l2 l3]);
-    l_d = unique([l4 l5 l6]);
+    l_s = unique([l1 l2]);
+    l_d = unique([l3 l4]);
     
     l = union(l_s, l_d);
     
@@ -135,6 +141,8 @@ function [msh] = mark_contacts(msh)
     
     msh.e = [msh.e newedges];
 
-    msh.onboundary(l_s) = newside_s;
-    msh.onboundary(l_d) = newside_d;
+    msh.onboundary(l1) = newside_s1;
+    msh.onboundary(l2) = newside_s2;
+    msh.onboundary(l3) = newside_d1;
+    msh.onboundary(l4) = newside_d2;
 endfunction

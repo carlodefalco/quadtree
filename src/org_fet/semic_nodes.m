@@ -2,8 +2,5 @@ function [scnodes] = semic_nodes(msh)
     Nnodes = columns(msh.p);
 
     scnodes = false(1, Nnodes);
-    semic = (msh.p(1, :) >= msh.dim.x_sc_min) & ...
-            (msh.p(1, :) <= msh.dim.x_sc_max) & ...
-            (msh.p(2, :) <= 0);
-    scnodes(semic) = true;
+    scnodes(msh.p(2, :) <= 0) = true;
 endfunction

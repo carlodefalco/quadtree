@@ -20,34 +20,53 @@ charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
 L = 10e-6; # Channel length.
-contact = 2e-6;
+x_min        = 0e-5;
+x_sc_min     = x_min        + 1e-5;
+x_source_min = x_sc_min     + 1e-5;
+x_source_max = x_source_min + 2e-5;
+x_drain_min  = x_source_max + L;
+x_drain_max  = x_drain_min  + 2e-5;
+x_sc_max     = x_drain_max  + 1e-5;
+x_max        = x_sc_max     + 1e-5;
 
-x_min    = 0;
-x_source = x_min + contact;
-x_drain  = x_source + L;
-x_max    = x_drain + contact;
+L_ov = 1e-5; # Overlap length.
+x_gate_min = x_source_max - L_ov;
+x_gate_max = x_drain_min  + L_ov;
 
-y_contact = -70e-9;
 y_sc      = -35e-9;
+y_contact = -25e-9;
 y_ins     = 441e-9;
 
-x = unique([linspace(x_min, x_source, 3), ...
-            linspace(x_source, x_drain, 5), ...
-            linspace(x_drain, x_max, 3)]);
-y = unique([linspace(y_contact, y_sc, 3), ...
-            linspace(y_sc, 0, 3), ...
+x = unique([linspace(x_min, x_sc_min, 3), ...
+            linspace(x_sc_min, x_source_min, 3), ...
+            linspace(x_source_min, x_gate_min, 2), ...
+            linspace(x_gate_min, x_source_max, 2), ...
+            linspace(x_source_max, x_drain_min, 3), ...
+            linspace(x_drain_min, x_gate_max, 2), ...
+            linspace(x_gate_max, x_drain_max, 2), ...
+            linspace(x_drain_max, x_sc_max, 3), ...
+            linspace(x_sc_max, x_max, 3)]);
+y = unique([linspace(y_sc, y_contact, 2), ...
+            linspace(y_contact, 0, 2), ...
             linspace(0, y_ins, 10)]);
 
 msh = msh2m_quadtree(x, y);
 
 # Assign mesh geometrical parameters.
-msh.dim.x_min    = x_min;
-msh.dim.x_source = x_source;
-msh.dim.x_drain  = x_drain;
-msh.dim.x_max    = x_max;
+msh.dim.x_min        = x_min;
+msh.dim.x_sc_min     = x_sc_min;
+msh.dim.x_source_min = x_source_min;
+msh.dim.x_source_max = x_source_max;
+msh.dim.x_drain_min  = x_drain_min;
+msh.dim.x_drain_max  = x_drain_max;
+msh.dim.x_sc_max     = x_sc_max;
+msh.dim.x_max        = x_max;
 
-msh.dim.y_contact = y_contact;
+msh.dim.x_gate_min = x_gate_min;
+msh.dim.x_gate_max = x_gate_max;
+
 msh.dim.y_sc      = y_sc;
+msh.dim.y_contact = y_contact;
 msh.dim.y_ins     = y_ins;
 
 msh = mark_contacts(msh);
@@ -66,13 +85,20 @@ for i = 1 : 15
     x = msh.p(1, :).';
     y = msh.p(2, :).';
     
-    msh.dim.x_min    = x_min;
-    msh.dim.x_source = x_source;
-    msh.dim.x_drain  = x_drain;
-    msh.dim.x_max    = x_max;
+    msh.dim.x_min        = x_min;
+    msh.dim.x_sc_min     = x_sc_min;
+    msh.dim.x_source_min = x_source_min;
+    msh.dim.x_source_max = x_source_max;
+    msh.dim.x_drain_min  = x_drain_min;
+    msh.dim.x_drain_max  = x_drain_max;
+    msh.dim.x_sc_max     = x_sc_max;
+    msh.dim.x_max        = x_max;
     
-    msh.dim.y_contact = y_contact;
+    msh.dim.x_gate_min = x_gate_min;
+    msh.dim.x_gate_max = x_gate_max;
+    
     msh.dim.y_sc      = y_sc;
+    msh.dim.y_contact = y_contact;
     msh.dim.y_ins     = y_ins;
     
     # Define parameters.
@@ -86,22 +112,22 @@ for i = 1 : 15
     M = @(msh) bim2a_quadtree_reaction(msh, !insulator(msh), ones(columns(msh.p), 1));
     
     # Source, drain and gate contacts.
-    gate    = msh2m_nodes_on_sides(msh, 3);
-    source1 = msh2m_nodes_on_sides(msh, 5);
-    source2 = msh2m_nodes_on_sides(msh, 6);
-    drain1  = msh2m_nodes_on_sides(msh, 7);
-    drain2  = msh2m_nodes_on_sides(msh, 8);
+    gate = intersect(msh2m_nodes_on_sides(msh, 3), ...
+                     find(x >= x_gate_min - eps(x_gate_min) &
+                          x <= x_gate_max + eps(x_gate_max)))';
+    source = msh2m_nodes_on_sides(msh, 5);
+    drain  = msh2m_nodes_on_sides(msh, 6);
     
     # Initial guess.
     Vg = 10; # [V].
-    phi0 = ((y - msh.dim.y_sc) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
-            (msh.dim.y_ins - msh.dim.y_sc);
-    phi0(y <= msh.dim.y_sc) = material.PhiB;
+    phi0 = material.PhiB * ones(size(x));
+    under_gate = (x >= x_gate_min - eps(x_gate_min)
+                  & x <= x_gate_max + eps(x_gate_max));
+    phi0(under_gate) = ((y(under_gate) - msh.dim.y_contact) * Vg - (y(under_gate) - msh.dim.y_ins) * material.PhiB) ./ ...
+                       (msh.dim.y_ins - msh.dim.y_contact);
     
     # Compute solution and error.
-    [phi, res, niter, C] = nlpoisson_fet(msh, phi0, A(msh), M(msh), ...
-                                         gate, source1, source2, drain1, drain2, ...
-                                         material, constants, charge_n);
+    [phi, res, niter, C] = nlpoisson_fet(msh, phi0, A(msh), M(msh), gate, source, drain, material, constants, charge_n);
     
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
