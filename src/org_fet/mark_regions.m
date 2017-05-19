@@ -37,7 +37,7 @@ function [msh] = mark_regions(msh)
     e2 = [l(2:end)  ];
 
     ne = numel(e1);
-    newside = 9;
+    newside = 7;
 
     newedges = [e1;
                 e2;

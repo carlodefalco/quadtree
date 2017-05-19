@@ -20,22 +20,20 @@ charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
 L = 10e-6; # Channel length.
-contact = 2e-6;
+contact = 10e-6;
 
 x_min    = 0;
 x_source = x_min + contact;
 x_drain  = x_source + L;
 x_max    = x_drain + contact;
 
-y_contact = -70e-9;
 y_sc      = -35e-9;
 y_ins     = 441e-9;
 
-x = unique([linspace(x_min, x_source, 3), ...
-            linspace(x_source, x_drain, 5), ...
-            linspace(x_drain, x_max, 3)]);
-y = unique([linspace(y_contact, y_sc, 3), ...
-            linspace(y_sc, 0, 3), ...
+x = unique([linspace(x_min, x_source, 4), ...
+            linspace(x_source, x_drain, 3), ...
+            linspace(x_drain, x_max, 4)]);
+y = unique([linspace(y_sc, 0, 3), ...
             linspace(0, y_ins, 10)]);
 
 msh = msh2m_quadtree(x, y);
@@ -46,17 +44,15 @@ msh.dim.x_source = x_source;
 msh.dim.x_drain  = x_drain;
 msh.dim.x_max    = x_max;
 
-msh.dim.y_contact = y_contact;
 msh.dim.y_sc      = y_sc;
 msh.dim.y_ins     = y_ins;
 
-msh = mark_contacts(msh);
-# Source and drain have region label = 3.
-msh = msh2m_quadtree_submesh(msh, 1:2);
+# Mark source and drain.
+[msh] = mark_contacts(msh);
 
 Nelems_max = 15000;
 
-for i = 1 : 15
+for i = 1 : 10
     fprintf("i = %d\n", i);
     msh = bim2c_quadtree_mesh_properties(msh, [], []);
     
@@ -71,7 +67,6 @@ for i = 1 : 15
     msh.dim.x_drain  = x_drain;
     msh.dim.x_max    = x_max;
     
-    msh.dim.y_contact = y_contact;
     msh.dim.y_sc      = y_sc;
     msh.dim.y_ins     = y_ins;
     
@@ -86,26 +81,26 @@ for i = 1 : 15
     M = @(msh) bim2a_quadtree_reaction(msh, !insulator(msh), ones(columns(msh.p), 1));
     
     # Source, drain and gate contacts.
-    gate    = msh2m_nodes_on_sides(msh, 3);
-    source1 = msh2m_nodes_on_sides(msh, 5);
-    source2 = msh2m_nodes_on_sides(msh, 6);
-    drain1  = msh2m_nodes_on_sides(msh, 7);
-    drain2  = msh2m_nodes_on_sides(msh, 8);
+    gate   = msh2m_nodes_on_sides(msh, 3);
+    source = msh2m_nodes_on_sides(msh, 5);
+    drain  = msh2m_nodes_on_sides(msh, 6);
     
     # Initial guess.
-    Vg = 10; # [V].
+    Vg = -20; # [V].
     phi0 = ((y - msh.dim.y_sc) * Vg - (y - msh.dim.y_ins) * material.PhiB) ./ ...
             (msh.dim.y_ins - msh.dim.y_sc);
-    phi0(y <= msh.dim.y_sc) = material.PhiB;
     
     # Compute solution and error.
     [phi, res, niter, C] = nlpoisson_fet(msh, phi0, A(msh), M(msh), ...
-                                         gate, source1, source2, drain1, drain2, ...
+                                         gate, source, drain, ...
                                          material, constants, charge_n);
     
     n = zeros(size(phi));
     n(scnodes) = -charge_n(phi(scnodes)) / constants.q;
-
+    
+    E_edge = bim2c_quadtree_pde_edge_gradient(msh, phi);
+    [E_x, E_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, E_edge);
+    
     # Determine elements to be refined.
     refineable_elements = find(!any(msh.children));
     
@@ -137,7 +132,7 @@ for i = 1 : 15
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"}, ...
+    fpl_vtk_write_field_quadmesh(filename, msh, {phi, "phi"; n, "n"; phi0, "phi0"}, ...
                                                 {estimator.', "estimator"}, 1);
     
     n_dofs(i) = sum(!any(msh.hanging));

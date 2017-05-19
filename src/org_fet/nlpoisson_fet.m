@@ -1,10 +1,10 @@
 ## Solve the non-linear Poisson problem using Newton's algorithm.
 function [phiout, resnrm, iter, C] = ...
          nlpoisson_fet(msh, phi0, A, M, ...
-                       gate, source1, source2, drain1, drain2, ...
+                       gate, source, drain, ...
                        material, constants, charge_n)
     
-    dnodes = unique([gate, source1, source2, drain1, drain2]);
+    dnodes = unique([gate, source, drain]);
     non_hanging = find(msh.full_to_reduced);
     
     # Newton's algorithm.
@@ -17,27 +17,11 @@ function [phiout, resnrm, iter, C] = ...
     # Boundary conditions.
     dphi_bc = zeros(size(phi));
     
-    M_source1 = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 5);
-    corner1 = find(ismember(source1, source2));
-    M_source1(corner1, :) = [];
-    M_source1(:, corner1) = [];
+    M_source = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 5);
+    M_drain  = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 6);
     
-    M_source2 = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 6);
-    
-    M_drain1 = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 7);
-    
-    M_drain2 = material.eps_semic * bim2a_quadtree_boundary_mass(msh, 8);
-    corner2 = find(ismember(drain2, drain1));
-    M_drain2(corner2, :) = [];
-    M_drain2(:, corner2) = [];
-    
-    source1 = setdiff(source1, source2);
-    drain2  = setdiff(drain2 , drain1 );
-    
-    source1_red = msh.full_to_reduced(source1);
-    source2_red = msh.full_to_reduced(source2);
-    drain1_red  = msh.full_to_reduced(drain1 );
-    drain2_red  = msh.full_to_reduced(drain2 );
+    source_red = msh.full_to_reduced(source);
+    drain_red  = msh.full_to_reduced(drain );
     
     for iter = 1 : maxit
         # Assemble system.
@@ -49,62 +33,38 @@ function [phiout, resnrm, iter, C] = ...
         
         jac = A - M .* sparse(diag(drho));
         
-        # Source contact top.
-        E_source1 = -M_source1 \ res(source1_red); # Outward normal electric field.
+        # Source contact.
+        E_source = -M_source \ res(source_red); # Outward normal electric field.
         
-        [PhiBcorr_source1, dPhiBcorr_source1] = barrier_lowering(E_source1, material, constants);
+        [PhiBcorr_source, dPhiBcorr_source] = barrier_lowering(E_source, material, constants);
         
-        res(source1_red) = M_source1 * (phi(source1) - (material.PhiB + constants.Vth * PhiBcorr_source1));
-        
-        for col = 1 : columns(jac)
-            jac(source1_red, col) .*= constants.Vth * dPhiBcorr_source1;
-        end
-        jac(source1_red, source1_red) += M_source1;
-        
-        # Source contact right.
-        E_source2 = -M_source2 \ res(source2_red); # Outward normal electric field.
-        
-        [PhiBcorr_source2, dPhiBcorr_source2] = barrier_lowering(E_source2, material, constants);
-        
-        res(source2_red) = M_source2 * (phi(source2) - (material.PhiB + constants.Vth * PhiBcorr_source2));
+        res(source_red) = M_source * (phi(source) - (material.PhiB + constants.Vth * PhiBcorr_source));
         
         for col = 1 : columns(jac)
-            jac(source2_red, col) .*= constants.Vth * dPhiBcorr_source2;
+            jac(source_red, col) .*= constants.Vth * dPhiBcorr_source;
         end
-        jac(source2_red, source2_red) += M_source2;
+        jac(source_red, source_red) += M_source;
         
+        # Drain contact.
+        E_drain = -M_drain \ res(drain_red); # Outward normal electric field.
         
-        # Drain contact left.
-        E_drain1 = -M_drain1 \ res(drain1_red); # Outward normal electric field.
+        [PhiBcorr_drain, dPhiBcorr_drain] = barrier_lowering(E_drain, material, constants);
         
-        [PhiBcorr_drain1, dPhiBcorr_drain1] = barrier_lowering(E_drain1, material, constants);
-        
-        res(drain1_red) = M_drain1 * (phi(drain1) - (material.PhiB + constants.Vth * PhiBcorr_drain1));
+        res(drain_red) = M_drain * (phi(drain) - (material.PhiB + constants.Vth * PhiBcorr_drain));
         
         for col = 1 : columns(jac)
-            jac(drain1_red, col) .*= constants.Vth * dPhiBcorr_drain1;
+            jac(drain_red, col) .*= constants.Vth * dPhiBcorr_drain;
         end
-        jac(drain1_red, drain1_red) += M_drain1;
-        
-        # Drain contact top.
-        E_drain2 = -M_drain2 \ res(drain2_red); # Outward normal electric field.
-        
-        [PhiBcorr_drain2, dPhiBcorr_drain2] = barrier_lowering(E_drain2, material, constants);
-        
-        res(drain2_red) = M_drain2 * (phi(drain2) - (material.PhiB + constants.Vth * PhiBcorr_drain2));
-        
-        for col = 1 : columns(jac)
-            jac(drain2_red, col) .*= constants.Vth * dPhiBcorr_drain2;
-        end
-        jac(drain2_red, drain2_red) += M_drain2;
-        
+        jac(drain_red, drain_red) += M_drain;
         
         # Compute solution.
         dphi = -bim2a_quadtree_solve(msh, jac, res, dphi_bc, gate);
         
-        clamp = 0.01;
-        dphi(dphi >  clamp) =  clamp;
-        dphi(dphi < -clamp) = -clamp;
+        if (max(phi0) >= 0)
+            clamp = 0.1;
+            dphi(dphi >  clamp) =  clamp;
+            dphi(dphi < -clamp) = -clamp;
+        endif
         
         phi += dphi;
         
@@ -127,8 +87,7 @@ function [phiout, resnrm, iter, C] = ...
         
         # Boundary conditions.
         y = msh.p(2, :).';
-        delta_phi0 = (y - msh.dim.y_contact) ./ (msh.dim.y_ins - msh.dim.y_contact);
-        delta_phi0(y < msh.dim.y_contact) = 0;
+        delta_phi0 = (y - msh.dim.y_sc) ./ (msh.dim.y_ins - msh.dim.y_sc);
         
         # Compute solution.
         delta_phi = bim2a_quadtree_solve(msh, mat, rhs, delta_phi0, dnodes);
