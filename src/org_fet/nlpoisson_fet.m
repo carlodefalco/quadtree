@@ -69,7 +69,6 @@ function [phiout, resnrm, iter, C] = ...
         phi += dphi;
         
         resnrm(iter) = norm(dphi, inf);
-        fprintf("%d, %g\n", iter, resnrm(iter));
         
         if resnrm(iter) < tol
             break;
@@ -94,6 +93,7 @@ function [phiout, resnrm, iter, C] = ...
         
         # Compute capacitance.
         delta_Q = sum(mat(msh.full_to_reduced(gate), :) * delta_phi(non_hanging));
-        C = 8.1e-7 * delta_Q / (msh.dim.x_max - msh.dim.x_min);
+        W = 0.01; # [m].
+        C = W * delta_Q;
     endif
 endfunction
