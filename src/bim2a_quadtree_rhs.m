@@ -18,10 +18,10 @@ function rhs = bim2a_quadtree_rhs (msh, f, g)
     
     g = g(elems);
     
-    VV(1, :) = g(1) .* hx .* hy / 4;
-    VV(2, :) = g(2) .* hx .* hy / 4;
-    VV(3, :) = g(3) .* hx .* hy / 4;
-    VV(4, :) = g(4) .* hx .* hy / 4;
+    VV(1, :) = g(1, :) .* hx .* hy / 4;
+    VV(2, :) = g(2, :) .* hx .* hy / 4;
+    VV(3, :) = g(3, :) .* hx .* hy / 4;
+    VV(4, :) = g(4, :) .* hx .* hy / 4;
     
     VV .*= repmat(reshape(f(refineable_elements), 1, Nelems), 4, 1);
     
