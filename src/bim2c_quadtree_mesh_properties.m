@@ -1,4 +1,4 @@
-function [msh, edge_space, node_space, rt_space] = ...
+function [msh, edge_space, node_space, q2_space, rt_space] = ...
          bim2c_quadtree_mesh_properties(msh, nodes=[], weights=[])
          
   ## Check inputs.
@@ -40,6 +40,20 @@ function [msh, edge_space, node_space, rt_space] = ...
   endif
   
   if (nargout > 3)
+    ## Compute shape functions and connectivity for Q2 space.
+    for iel = 1 : columns(msh.t)
+        phi = bim2c_quadtree_eval_fun_q2 ...
+            (msh, iel, msh.nodes(1, :, iel), msh.nodes(2, :, iel));
+        
+        q2_space.shp(:, :, iel) = phi;
+    endfor
+    
+    nel = columns(msh.t);
+    
+    q2_space.connectivity = [msh.t(1:4, :); msh.ts; 1:nel];
+  endif
+  
+  if (nargout > 4)
     ## Compute shape functions and connectivity for Raviart-Thomas edge space.
     for iel = 1 : columns(msh.t)
         [dphi_x, dphi_y] = bim2c_quadtree_eval_dfun_rt ...
