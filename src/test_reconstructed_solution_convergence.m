@@ -8,8 +8,8 @@ for i = 1 : numel(n)
     fprintf("i = %d, n = %d\n", i, n(i));
     
     # Mesh definition.
-    x = linspace(0, 1, n(i));
-    y = linspace(0, 1, n(i));
+    x = linspace(0, 2*pi, n(i));
+    y = linspace(0, 2*pi, n(i));
     
     msh = msh2m_quadtree(x, y);
     [msh, ~, node_space, q2_space] = bim2c_quadtree_mesh_properties(msh, [], []);
@@ -70,8 +70,7 @@ for i = 1 : numel(n)
                                   u_ex, "u_ex";
                                   abs(u - u_ex), "|u - u_ex|"},
                                  {err(:), "err";
-                                  estimator(:), "estimator";
-                                  u_star_center(q2_space.connectivity(9, :)), "uu"}, 1);
+                                  estimator(:), "estimator"}, 1);
 endfor
 
 h = 1 ./ n;
