@@ -34,27 +34,7 @@ for i = 1 : numel(n)
 
     u = bim2a_quadtree_solve(msh, A, rhs, u_ex, dnodes);
     
-    # Evaluate u on quadrature nodes for each element.
-    Nquad = size(node_space.shp, 1); # No. of quadrature nodes.
-    Nconn = size(node_space.connectivity);
-    u_ex_ = reshape(u_ex(node_space.connectivity), [1, Nconn]);
-    u_ex_ = repmat(u_ex_, [Nquad, 1, 1]);
-    
-    u_ex_node = squeeze(sum(node_space.shp .* u_ex_, 2));
-    
-    # Evaluate u_star on quadrature nodes for each element.
-    [u_star_node, u_star_edge, u_star_center] = bim2c_quadtree_pde_reconstructed_solution(msh, u);
-    
-    Nconn = size(q2_space.connectivity);
-    u_star = reshape([u_star_node(q2_space.connectivity(1:4, :));
-                      u_star_edge(q2_space.connectivity(5:8, :));
-                      u_star_center(q2_space.connectivity(9, :)).'], [1, Nconn]);
-    u_star = repmat(u_star, [Nquad, 1, 1]);
-    
-    u_q2 = squeeze(sum(q2_space.shp .* u_star, 2));
-    
-    err = (u_ex_node - u_q2).^2;
-    err = sqrt(sum(err .* msh.wjacdet, 1));
+    err = bim2c_quadtree_pde_error_L2_node_q2(msh, u, u_ex);
     err_norm(i) = norm(err, 2);
     
     estimator = bim2c_quadtree_pde_ZZ_estimator_u(msh, u);
