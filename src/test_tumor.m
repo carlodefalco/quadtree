@@ -43,11 +43,10 @@ ono = ones (Nnodes, 1);
 
 mass   = bim2a_quadtree_reaction (msh, oel, ono);
 
-hm = @(u) 4 ./  sum (1 ./ u(msh.t (1:4, :)), 1) .';
-diffm  = @(m, n) hm (mu * g * ((g + 1)/g) .* m .* (n + m) .^ (g-1)) (:);
-diffn  = @(m, n) hm (nu * g * ((g + 1)/g) .* n .* (n + m) .^ (g-1)) (:);
-stiffm = @(m, n) bim2a_quadtree_laplacian (msh, diffm (m,n)); 
-stiffn = @(m, n) bim2a_quadtree_laplacian (msh, diffn (m,n)); 
+diffm  = @(m, n) (mu * g * ((g + 1)/g) .* m .* (n + m) .^ (g-1));
+diffn  = @(m, n) (nu * g * ((g + 1)/g) .* n .* (n + m) .^ (g-1));
+stiffm = @(m, n) bim2a_quadtree_eafe_laplacian (msh, diffm (m,n)); 
+stiffn = @(m, n) bim2a_quadtree_eafe_laplacian (msh, diffn (m,n)); 
 
 function [res, jac] = fun (u, mold, nold, inodes, dnodes,
                            stiffm, stiffn, mass, pressure, G, dt)
@@ -92,6 +91,15 @@ dt    = 1e-5;
 mvold = mold = m;
 nvold = nold = n;
 
+filename = sprintf ("test_tumor_%4.4d", 1);
+delete ([filename ".vtu"])
+fpl_vtk_write_field_quadmesh (filename, msh,
+                              {m, "m"; n, "n";
+                               pressure(m,n), "p";
+                               diffm(m,n), "Dm",
+                               diffn(m,n), "Dn"},
+                              {}, 1);
+  
 for its = 2 : nt
   
   while (t < tsave(its))
@@ -200,9 +208,10 @@ for its = 2 : nt
   delete ([filename ".vtu"])
   fpl_vtk_write_field_quadmesh (filename, msh,
                                 {m, "m"; n, "n";
-                                 pressure(m,n), "p"},
-                                {diffm(m,n), "Dm",
-                                 diffn(m,n), "Dn"}, 1);
+                                 pressure(m,n), "p";
+                                 diffm(m,n), "Dm",
+                                 diffn(m,n), "Dn"},
+                                {}, 1);
   printf ("saving step : t = %g its = %d\n", t, its)
   
 endfor
