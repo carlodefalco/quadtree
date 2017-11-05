@@ -91,7 +91,7 @@ dt    = 1e-5;
 mvold = mold = m;
 nvold = nold = n;
 
-filename = sprintf ("test_tumor_%4.4d", 1);
+filename = sprintf ("test_tumor_unst_%4.4d", 1);
 delete ([filename ".vtu"])
 fpl_vtk_write_field_quadmesh (filename, msh,
                               {m, "m"; n, "n";
