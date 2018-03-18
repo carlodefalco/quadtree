@@ -4,19 +4,20 @@ clc;
 
 addpath(canonicalize_file_name("../"));
 
+n = 5;
+
+# Mesh definition.
+x = linspace(0, 1, n);
+y = linspace(0, 1, n);
+
+msh = msh2m_quadtree(x, y);
+
 tol_max = 1e-3;
 Nelems_max = 10000;
 
 for i = 1 : 10
     fprintf("i = %d\n", i);
-
-    n(i) = 6 * 2^(i-1);
     
-    # Mesh definition.
-    x = linspace(0, 1, n(i));
-    y = linspace(0, 1, n(i));
-    
-    msh = msh2m_quadtree(x, y);
     msh = bim2c_quadtree_mesh_properties(msh);
     
     Nnodes = columns(msh.p);
@@ -26,7 +27,7 @@ for i = 1 : 10
     y = msh.p(2, :).';
     
     # Define parameters and exact solution.
-    epsilon = 1e-2;
+    epsilon = 1e-5;
     
     u_ex = (1 - sinh(x / sqrt(epsilon)) / sinh(1 / sqrt(epsilon))) .* (1 - sinh(y / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)));
     du_x_ex = (cosh(x / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)) .* (-1 + sinh(y / sqrt(epsilon)) / sinh(1 / sqrt(epsilon)))) / sqrt(epsilon);
@@ -62,7 +63,8 @@ for i = 1 : 10
     
     # Determine elements to be refined.
     estimator = bim2c_quadtree_pde_ZZ_estimator_du(msh, u);
-    to_refine = bim2c_quadtree_pde_ZZ_to_refine(msh, estimator, mean(estimator), 1);
+    to_refine = false(1, Nelems);
+    to_refine(refineable_elements) = true;
     
     # Save solution to file.
     fclose all;
@@ -71,7 +73,7 @@ for i = 1 : 10
     if (exist([filename ".vtu"], "file"))
         delete([filename ".vtu"]);
     endif
-    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"},
+    fpl_vtk_write_field_quadmesh(filename, msh, {u, "u"; u_ex, "u_ex"; du_x, "du_x"; du_x_ex, "du_x_ex"; du_y, "du_y"; du_y_ex, "du_y_ex"},
                                  {err_edge.', "err_edge"; err_node.', "err_node"; estimator.', "estimator"}, 1);
     
     n_dofs(i) = sum(!any(msh.hanging));
@@ -88,4 +90,11 @@ for i = 1 : 10
          "global_estimator", "global_error");
     
     fprintf("Elements to refine = %d / %d\n\n", sum(to_refine), numel(refineable_elements));
+    
+    # Do refinement.
+    if (n_elems(i) >= Nelems_max)
+        break;
+    else
+        msh = msh2m_quadtree_refine(msh, find(to_refine));
+    endif
 endfor
