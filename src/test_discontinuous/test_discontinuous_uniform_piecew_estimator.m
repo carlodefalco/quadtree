@@ -71,7 +71,7 @@ for i = 1 : 10
     
     err_L2 = bim2c_quadtree_pde_error_L2_node(msh, u, u_ex);
     err_L2_1 = bim2c_quadtree_pde_error_L2_node(msh1, u(omega1), u_ex(omega1));
-    err_L2_2 = bim2c_quadtree_pde_error_L2_node(msh2, u(omega2), u_ex(omega1));
+    err_L2_2 = bim2c_quadtree_pde_error_L2_node(msh2, u(omega2), u_ex(omega2));
     
     du_edge = bim2c_quadtree_pde_edge_gradient(msh, u);
     [du_x, du_y] = bim2c_quadtree_pde_reconstructed_gradient(msh, du_edge);
