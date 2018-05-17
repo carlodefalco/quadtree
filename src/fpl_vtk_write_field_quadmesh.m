@@ -90,7 +90,7 @@ function print_grid (fid, dim, p, nnodes, t, nelems)
   ## VTK-Points (mesh nodes)
   fprintf (fid, "<Points>\n");
   fprintf (fid, "<DataArray type=""Float64"" Name=""Array"" NumberOfComponents=""3"" format=""ascii"">\n");  
-  fprintf (fid, "%.17g %.17g %.17g\n", p);
+  fprintf (fid, "%.17f %.17f %.17f\n", p);
   fprintf (fid, "</DataArray>\n");
   fprintf (fid, "</Points>\n");
 
@@ -132,7 +132,7 @@ function print_data_points (fid, nodedata, nnodes)
       endif
       fprintf (fid, "<DataArray type=""Float64"" Name=""%s"" ", dataname);
       fprintf (fid, "NumberOfComponents=""%d"" format=""ascii"">\n", ncomp);
-	fprintf (fid, "%.17g ", data.');
+	fprintf (fid, "%.17f ", data.');
 	fprintf (fid, "\n");
       fprintf (fid, "</DataArray>\n"); 
     endfor
@@ -159,7 +159,7 @@ function print_cell_data (fid, celldata, nelems)
       endif
       fprintf (fid, "<DataArray type=""Float64"" Name=""%s"" ", dataname);
       fprintf (fid, "NumberOfComponents=""%d"" format=""ascii"">\n", ncomp);
-	fprintf (fid, "%.17g ", data.');
+	fprintf (fid, "%.17f ", data.');
 	fprintf (fid, "\n");
       fprintf (fid, "</DataArray>\n");
     endfor
