@@ -19,10 +19,10 @@ quadrature.gw = gw;
 charge_n = @(phi) gaussian_charge_n (phi, material, constants, quadrature);
 
 # Create mesh.
-x_min      = 0.70e-6;
-x_sc_max   = 1.15e-6;
-x_bulk_max = 1.20e-6;
-x_max      = 1.40e-6;
+x_min      = 0.70e-3;
+x_sc_max   = 1.15e-3;
+x_bulk_max = 1.20e-3;
+x_max      = 1.40e-3;
 
 y_sc  = -35e-9;
 y_ins = 441e-9;
